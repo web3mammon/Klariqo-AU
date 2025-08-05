@@ -36,7 +36,6 @@ from logger import call_logger
 from routes.inbound import inbound_bp
 from routes.outbound import outbound_bp
 from routes.test import test_bp
-from routes.exotel import exotel_bp
 
 # Initialize Flask app with WebSocket support
 app = Flask(__name__)
@@ -53,7 +52,6 @@ audio_manager.reload_library()
 app.register_blueprint(inbound_bp)
 app.register_blueprint(outbound_bp, url_prefix='/outbound')
 app.register_blueprint(test_bp)
-app.register_blueprint(exotel_bp)  # Enhanced Exotel routes with dynamic variable tracking
 
 # Initialize Deepgram client
 config = DeepgramClientOptions(options={"keepalive": "true"})
@@ -72,357 +70,120 @@ def health_check():
     <p><strong>Audio Files Cached:</strong> {len(audio_manager.memory_cache)}</p>
     <br>    
     <p><a href="/test">🧪 Test Page</a></p>
-    <p><a href="/exotel/debug">🔧 Exotel Debug</a></p>
     """
 
-# ===== EXOTEL ROUTES =====
 
-@app.route("/exotel/voice", methods=['POST'])
-def handle_exotel_incoming():
-    """Handle incoming call from Exotel"""
-    
-    call_sid = request.form.get('CallSid')
-    from_number = request.form.get('From')
-    to_number = request.form.get('To')
-    
-    print(f"📞 Exotel call: {call_sid}")
-    
-    if not call_sid:
-        print("❌ No CallSid received")
-        return "Error: No CallSid", 400
-    
-    # Create session
-    session = session_manager.create_session(call_sid, "inbound")
-    session.session_memory["intro_played"] = True
-    
-    # Log call start
-    call_logger.log_call_start(call_sid, from_number, "inbound")
-    
-    # Use HTTPS endpoint for dynamic WebSocket URL generation  
-    websocket_endpoint = f"https://{request.host}/exotel/get_websocket"
-    
-    exotel_response = f"""<?xml version="1.0" encoding="UTF-8"?>
-<Response>
-    <Voicebot url="{websocket_endpoint}" />
-</Response>"""
-    
-    return exotel_response, 200, {'Content-Type': 'application/xml'}
-
-@app.route("/exotel/get_websocket", methods=['GET'])
-def get_dynamic_websocket_url():
-    """Return dynamic WebSocket URL as JSON per Exotel spec"""
-    
-    call_sid = request.args.get('CallSid')
-    
-    if not call_sid:
-        return {"error": "Missing CallSid"}, 400
-    
-    # Generate WebSocket URL
-    websocket_url = f"wss://{request.host}/exotel/media/{call_sid}"
-    
-    print(f"🔗 WebSocket: {websocket_url}")
-    
-    return {
-        "url": websocket_url
-    }, 200, {'Content-Type': 'application/json'}
-
-@app.route("/exotel/status", methods=['POST'])
-def exotel_call_status():
-    """Handle Exotel call status updates"""
-    
-    call_sid = request.form.get('CallSid')
-    call_status = request.form.get('CallStatus')
-    
-    print(f"📞 Status: {call_sid} → {call_status}")
-    
-    if call_status in ['completed', 'failed', 'busy', 'no-answer']:
-        call_logger.log_call_end(call_sid, call_status)
-        session_manager.remove_session(call_sid)
-    
-    return "OK", 200
-
-@app.route("/exotel/debug", methods=['GET'])
-def exotel_debug():
-    """Debug endpoint"""
-    
-    return {
-        "status": "Exotel Working - Direct audio streaming",
-        "active_sessions": session_manager.get_active_count(),
-        "cached_audio_files": len(audio_manager.cached_files),
-        "endpoints": {
-            "incoming": "/exotel/voice",
-            "websocket_generator": "/exotel/get_websocket",
-            "status": "/exotel/status",
-            "websocket": "/exotel/media/<call_sid>"
-        }
-    }
 
 # ===== AUDIO FILE SERVING FUNCTIONS =====
 
-def convert_mp3_to_pcm_for_tts(mp3_data):
+def send_audio_twilio_media_stream(ws, ulaw_data, stream_sid):
     """
-    Convert MP3 from TTS to PCM format for Exotel
-    Only used for TTS fallback - pre-recorded audio is already PCM
-    """
-    try:
-        # Try using librosa for MP3 to PCM conversion
-        import librosa
-        import numpy as np
-        
-        # Load MP3 using librosa and convert to Exotel format
-        audio_data, sr = librosa.load(io.BytesIO(mp3_data), sr=8000, mono=True)
-        
-        print(f"📊 TTS Audio: Converted to 8000Hz mono, {len(audio_data)} samples")
-        
-        # Convert to 16-bit PCM (Exotel format)
-        audio_data = np.clip(audio_data, -1.0, 1.0)
-        pcm_16bit = (audio_data * 32767).astype(np.int16)
-        pcm_data = pcm_16bit.tobytes()
-        
-        print(f"✅ TTS converted to PCM: {len(pcm_data)} bytes")
-        return pcm_data
-        
-    except ImportError:
-        print("❌ librosa not available for TTS conversion")
-        return None
-    except Exception as e:
-        print(f"❌ TTS MP3 to PCM conversion failed: {e}")
-        return None
-
-def send_audio_exotel_direct(ws, pcm_data, stream_sid):
-    """
-    Send PCM data directly to Exotel with proper chunking per Exotel specifications
+    Send μ-law data to Twilio Media Streams with proper formatting
     
-    Exotel requirements:
-    - Chunk size should be in multiples of 320 bytes
-    - Minimum chunk size: 3.2k (100ms data)
-    - Maximum chunk size: 100k
-    - Format: 16-bit, 8kHz, mono PCM (little-endian), base64 encoded
+    Twilio Media Streams:
+    - Format: 8-bit μ-law, 8kHz, mono, base64 encoded
+    - Flexible chunk sizes (no 320-byte requirement like Exotel)
+    - Send via WebSocket as media events
     """
     try:
         if not stream_sid:
             print("❌ No stream_sid available")
             return
         
-        if not pcm_data:
-            print("❌ No PCM data provided")
+        if not ulaw_data:
+            print("❌ No μ-law data provided")
             return
         
-        print(f"🎵 Sending {len(pcm_data)} bytes of PCM data...")
+        print(f"🎵 Sending {len(ulaw_data)} bytes of μ-law data...")
         
-        # Exotel chunk size requirements (multiples of 320 bytes)
-        CHUNK_SIZE = 3200  # 100ms of audio data (minimum recommended)
-        total_chunks = len(pcm_data) // CHUNK_SIZE
+        # Send μ-law data in reasonable chunks (Twilio is flexible)
+        CHUNK_SIZE = 8000  # ~1 second of 8kHz μ-law audio
+        total_chunks = len(ulaw_data) // CHUNK_SIZE
         
         print(f"🎵 Sending {total_chunks} chunks of {CHUNK_SIZE} bytes each")
         
-        # Send chunks with proper timing
+        # Send chunks with minimal delay
         for i in range(total_chunks):
             start_pos = i * CHUNK_SIZE
             end_pos = start_pos + CHUNK_SIZE
-            chunk = pcm_data[start_pos:end_pos]
+            chunk = ulaw_data[start_pos:end_pos]
             
-            # Send chunk to Exotel
+            # Send chunk to Twilio
             message = json.dumps({
                 'event': 'media',
-                'stream_sid': stream_sid,
+                'streamSid': stream_sid,
                 'media': {
                     'payload': base64.b64encode(chunk).decode("ascii")
                 }
             })
             
             ws.send(message)
-            time.sleep(0.02)  # 20ms delay between chunks
+            time.sleep(0.01)  # 10ms delay between chunks
             
-            if (i + 1) % 50 == 0:
+            if (i + 1) % 100 == 0:
                 print(f"📡 Sent {i + 1}/{total_chunks} chunks...")
         
-        # Handle remaining bytes (pad to 320-byte boundary)
-        remaining_bytes = len(pcm_data) % CHUNK_SIZE
+        # Send remaining bytes (no padding needed for μ-law)
+        remaining_bytes = len(ulaw_data) % CHUNK_SIZE
         if remaining_bytes > 0:
             last_chunk_start = total_chunks * CHUNK_SIZE
-            last_chunk = pcm_data[last_chunk_start:]
-            
-            # Pad to nearest 320-byte boundary
-            padding_needed = (320 - (len(last_chunk) % 320)) % 320
-            last_chunk = last_chunk + b'\x00' * padding_needed
+            last_chunk = ulaw_data[last_chunk_start:]
             
             message = json.dumps({
                 'event': 'media',
-                'stream_sid': stream_sid,
+                'streamSid': stream_sid,
                 'media': {
                     'payload': base64.b64encode(last_chunk).decode("ascii")
                 }
             })
             
             ws.send(message)
-            print(f"📡 Sent final padded chunk")
+            print(f"📡 Sent final chunk")
         
-        print(f"✅ PCM audio sent successfully: {total_chunks} chunks")
+        print(f"✅ μ-law audio sent successfully: {total_chunks} chunks")
         
     except Exception as e:
         print(f"❌ Send error: {e}")
         import traceback
         traceback.print_exc()
 
-def process_and_respond_exotel_final(transcript, call_sid, ws, stream_sid):
-    """Process input and respond with direct audio serving"""
+def convert_mp3_to_ulaw_for_tts(mp3_data):
+    """
+    Convert MP3 from TTS to μ-law format for Twilio
+    Only used for TTS fallback - pre-recorded audio is already μ-law
+    """
     try:
-        session = session_manager.get_session(call_sid)
-        if not session:
-            return
+        # Try using librosa for MP3 to μ-law conversion
+        import librosa
+        import numpy as np
         
-        start_time = time.time()
+        # Load MP3 using librosa and convert to Twilio format
+        audio_data, sr = librosa.load(io.BytesIO(mp3_data), sr=8000, mono=True)
         
-        # Log parent's input
-        call_logger.log_parent_input(call_sid, transcript)
+        print(f"📊 TTS Audio: Converted to 8000Hz mono, {len(audio_data)} samples")
         
-        # Get AI response
-        response_type, content = response_router.get_school_response(transcript, session)
+        # Convert to 16-bit PCM first (required for audioop.lin2ulaw)
+        audio_data = np.clip(audio_data, -1.0, 1.0)
+        pcm_16bit = (audio_data * 32767).astype(np.int16)
         
-        # Calculate response time
-        response_time_ms = int((time.time() - start_time) * 1000)
+        # Convert 16-bit PCM to μ-law format (8-bit)
+        ulaw_data = audioop.lin2ulaw(pcm_16bit.tobytes(), 2)  # 2 = 16-bit samples
         
-        # Add to history
-        session.add_to_history("Parent", transcript)
-        session.add_to_history("Nisha", f"<{response_type}: {content}>")
+        print(f"✅ TTS converted to μ-law: {len(ulaw_data)} bytes")
+        return ulaw_data
         
-        # Clean logging
-        print(f"📞 User: {transcript}")
-        print(f"🤖 AI: {content} ({response_time_ms}ms)")
-        
-        if response_type == "AUDIO":
-            # Send PCM audio files directly
-            audio_files = [f.strip() for f in content.split('+')]
-            
-            for audio_file in audio_files:
-                # Ensure we use .mp3 extension for cache lookup (audio manager uses .mp3 keys)
-                cache_key = audio_file.replace('.pcm', '.mp3') if audio_file.endswith('.pcm') else audio_file
-                
-                if cache_key in audio_manager.memory_cache:
-                    pcm_data = audio_manager.memory_cache[cache_key]
-                    
-                    # Send PCM data directly to Exotel
-                    send_audio_exotel_direct(ws, pcm_data, stream_sid)
-                    time.sleep(1.0)
-                else:
-                    print(f"❌ PCM audio file not in cache: {cache_key} (original: {audio_file})")
-                    
-            call_logger.log_nisha_audio_response(call_sid, content)
-            
-        elif response_type == "TTS":
-            # Generate TTS and convert MP3 to PCM for Exotel
-            tts_audio_data = tts_engine.generate_audio(content, save_temp=False)
-            if tts_audio_data:
-                # Convert MP3 from ElevenLabs to PCM for Exotel
-                pcm_data = convert_mp3_to_pcm_for_tts(tts_audio_data)
-                if pcm_data:
-                    send_audio_exotel_direct(ws, pcm_data, stream_sid)
-                else:
-                    print("❌ TTS MP3 to PCM conversion failed")
-                    
-            call_logger.log_nisha_tts_response(call_sid, content)
-        
-        print(f"✅ Response sent")
-        
+    except ImportError:
+        print("❌ librosa not available for TTS conversion")
+        return None
     except Exception as e:
-        print(f"❌ Processing error: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ TTS MP3 to μ-law conversion failed: {e}")
+        return None
 
-# ===== EXOTEL WEBSOCKET HANDLER =====
 
-@sock.route('/exotel/media/<call_sid>')
-def exotel_media_stream(ws, call_sid):
-    """Handle Exotel WebSocket - Direct audio streaming"""
-    
-    session = session_manager.get_session(call_sid)
-    if not session:
-        session = session_manager.create_session(call_sid, "inbound")
-    
-    session.twilio_ws = ws
-    session.stream_sid = None
-    
-    def start_deepgram():
-        """Initialize Deepgram connection"""
-        try:
-            options = LiveOptions(
-                model=Config.DEEPGRAM_MODEL,
-                language=Config.DEEPGRAM_LANGUAGE,
-                punctuate=True,
-                smart_format=True,
-                sample_rate=8000,
-                encoding="linear16",
-                channels=1,
-                interim_results=True,
-            )
-            
-            session.dg_connection = deepgram_client.listen.websocket.v("1")
-            session.dg_connection.on(LiveTranscriptionEvents.Transcript, session.on_deepgram_message)
-            session.dg_connection.on(LiveTranscriptionEvents.Error, session.on_deepgram_error)
-            session.dg_connection.on(LiveTranscriptionEvents.Open, session.on_deepgram_open)
-            session.dg_connection.start(options)
-            
-        except Exception as e:
-            print(f"❌ Deepgram error: {e}")
-    
-    # Start Deepgram
-    deepgram_thread = threading.Thread(target=start_deepgram)
-    deepgram_thread.daemon = True
-    deepgram_thread.start()
-    time.sleep(0.5)
-    
-    def transcript_checker():
-        """Monitor for completed transcripts"""
-        while True:
-            time.sleep(0.05)
-            if session.check_for_completion():
-                process_and_respond_exotel_final(session.completed_transcript, call_sid, ws, session.stream_sid)
-                session.reset_for_next_input()
-    
-    checker_thread = threading.Thread(target=transcript_checker)
-    checker_thread.daemon = True
-    checker_thread.start()
-    
-    try:
-        while True:
-            message = ws.receive()
-            if message is None:
-                break
-                
-            data = json.loads(message)
-            event_type = data.get('event')
-            
-            if event_type == 'connected':
-                print(f"🔌 Exotel connected: {call_sid}")
-                
-            elif event_type == 'start':
-                session.stream_sid = data.get('stream_sid')
-                print(f"🎤 Stream started: {session.stream_sid}")
-                
-            elif event_type == 'media':
-                if session.dg_connection:
-                    media_payload = data.get('media', {}).get('payload')
-                    if media_payload:
-                        try:
-                            linear_data = base64.b64decode(media_payload)
-                            session.dg_connection.send(linear_data)
-                        except Exception as e:
-                            print(f"⚠️ Audio error: {e}")
-                            
-            elif event_type == 'stop':
-                print(f"🛑 Stream stopped: {call_sid}")
-                break
-                
-    except Exception as e:
-        print(f"❌ WebSocket error: {e}")
-        
-    finally:
-        if session.dg_connection:
-            session.dg_connection.finish()
-            session.dg_connection = None
 
-# ===== TWILIO WEBSOCKET (KEEP FOR BACKWARDS COMPATIBILITY) =====
+
+
+# ===== TWILIO WEBSOCKET HANDLER =====
 
 @sock.route('/media/<call_sid>')
 def media_stream(ws, call_sid):
@@ -432,6 +193,7 @@ def media_stream(ws, call_sid):
         return
     
     session.twilio_ws = ws
+    session.stream_sid = None
     
     def start_deepgram():
         """Initialize Deepgram connection for this session"""
@@ -467,8 +229,8 @@ def media_stream(ws, call_sid):
         while True:
             time.sleep(0.05)
             if session.check_for_completion():
-                redirect_to_processing(session.completed_transcript, call_sid)
-                break
+                process_and_respond_twilio_stream(session.completed_transcript, call_sid, ws, session.stream_sid)
+                session.reset_for_next_input()
     
     # Start transcript checker
     checker_thread = threading.Thread(target=transcript_checker)
@@ -484,7 +246,27 @@ def media_stream(ws, call_sid):
                 
             data = json.loads(message)
             
-            if data.get('event') == 'media':
+            if data.get('event') == 'connected':
+                print(f"🔌 Twilio connected: {call_sid}")
+                
+            elif data.get('event') == 'start':
+                session.stream_sid = data.get('streamSid')
+                print(f"🎤 Stream started: {session.stream_sid}")
+                
+                # Send intro audio immediately after stream starts
+                if hasattr(session, 'selected_intro') and session.selected_intro:
+                    intro_file = session.selected_intro
+                    cache_key = intro_file.replace('.ulaw', '.mp3') if intro_file.endswith('.ulaw') else intro_file
+                    
+                    if cache_key in audio_manager.memory_cache:
+                        ulaw_data = audio_manager.memory_cache[cache_key]
+                        send_audio_twilio_media_stream(ws, ulaw_data, session.stream_sid)
+                        call_logger.log_nisha_audio_response(call_sid, intro_file)
+                        print(f"🎵 Sent intro via WebSocket: {intro_file}")
+                    else:
+                        print(f"❌ Intro audio not in cache: {cache_key}")
+                
+            elif data.get('event') == 'media':
                 # Forward audio to Deepgram
                 if session.dg_connection:
                     media_payload = data.get('media', {}).get('payload', '')
@@ -498,6 +280,7 @@ def media_stream(ws, call_sid):
                             print(f"⚠️ Audio processing error: {e}")
                             
             elif data.get('event') == 'stop':
+                print(f"🛑 Stream stopped: {call_sid}")
                 break
                 
     except Exception as e:
@@ -509,8 +292,8 @@ def media_stream(ws, call_sid):
             session.dg_connection.finish()
             session.dg_connection = None
 
-def redirect_to_processing(transcript, call_sid):
-    """Process user input and prepare response for Twilio"""
+def process_and_respond_twilio_stream(transcript, call_sid, ws, stream_sid):
+    """Process input and respond with bidirectional μ-law streaming"""
     try:
         session = session_manager.get_session(call_sid)
         if not session:
@@ -527,48 +310,56 @@ def redirect_to_processing(transcript, call_sid):
         # Calculate response time
         response_time_ms = int((time.time() - start_time) * 1000)
         
-        # Generate TTS if needed
-        if response_type == "TTS":
-            temp_filename = tts_engine.generate_audio(content, save_temp=True)
-            if not temp_filename:
-                print(f"❌ TTS generation failed for: {content}")
-                return
-        
-        # Prepare session for TwiML generation
-        session.next_response_type = response_type
-        session.next_response_content = content
-        session.next_transcript = transcript
-        session.ready_for_twiml = True
+        # Add to history
+        session.add_to_history("Parent", transcript)
+        session.add_to_history("Nisha", f"<{response_type}: {content}>")
         
         # Clean logging
-        direction_emoji = "📞" if session.call_direction == "inbound" else "🏫"
+        print(f"📞 User: {transcript}")
+        print(f"🤖 AI: {content} ({response_time_ms}ms)")
         
         if response_type == "AUDIO":
-            print(f"{direction_emoji} User: {transcript}")
-            print(f"{direction_emoji} GPT Response: {content} ({response_time_ms}ms)")
-        else:
-            print(f"{direction_emoji} User: {transcript}")
-            print(f"{direction_emoji} TTS Response: {content} ({response_time_ms}ms)")
-        
-        # Redirect call to continue endpoint
-        global current_ngrok_url
-        if current_ngrok_url:
-            from twilio.rest import Client
-            twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+            # Send μ-law audio files directly via WebSocket
+            audio_files = [f.strip() for f in content.split('+')]
             
-            if session.call_direction == "outbound":
-                continue_url = f"{current_ngrok_url}/outbound/twilio/continue/{call_sid}"
-            else:
-                continue_url = f"{current_ngrok_url}/twilio/continue/{call_sid}"
+            for audio_file in audio_files:
+                # Ensure we use .mp3 extension for cache lookup (audio manager uses .mp3 keys)
+                cache_key = audio_file.replace('.ulaw', '.mp3') if audio_file.endswith('.ulaw') else audio_file
                 
-            twilio_client.calls(call_sid).update(url=continue_url, method='POST')
+                if cache_key in audio_manager.memory_cache:
+                    ulaw_data = audio_manager.memory_cache[cache_key]
+                    
+                    # Send μ-law data directly to Twilio via WebSocket
+                    send_audio_twilio_media_stream(ws, ulaw_data, stream_sid)
+                    time.sleep(1.0)
+                else:
+                    print(f"❌ μ-law audio file not in cache: {cache_key} (original: {audio_file})")
+                    
+            call_logger.log_nisha_audio_response(call_sid, content)
             
+        elif response_type == "TTS":
+            # Generate TTS and convert MP3 to μ-law for Twilio
+            tts_audio_data = tts_engine.generate_audio(content, save_temp=False)
+            if tts_audio_data:
+                # Convert MP3 from ElevenLabs to μ-law for Twilio
+                ulaw_data = convert_mp3_to_ulaw_for_tts(tts_audio_data)
+                if ulaw_data:
+                    send_audio_twilio_media_stream(ws, ulaw_data, stream_sid)
+                else:
+                    print("❌ TTS MP3 to μ-law conversion failed")
+                    
+            call_logger.log_nisha_tts_response(call_sid, content)
+        
+        print(f"✅ Response sent")
+        
     except Exception as e:
-        print(f"❌ Processing error for {call_sid}: {e}")
+        print(f"❌ Processing error: {e}")
+        import traceback
+        traceback.print_exc()
 
-@app.route("/audio_pcm/<filename>")
+@app.route("/audio_ulaw/<filename>")
 def serve_audio(filename):
-    """Serve PCM audio files from memory cache"""
+    """Serve μ-law audio files from memory cache"""
     return audio_manager.serve_audio_file(filename)
 
 @app.route("/temp/<filename>")
@@ -716,13 +507,14 @@ if __name__ == "__main__":
     if public_url:
         print(f"🌐 Public URL: {public_url}")
         print()
-        print("📞 EXOTEL SETUP:")
-        print(f"   Incoming Call URL: {public_url}/exotel/voice")
-        print(f"   Voicebot URL: {public_url}/exotel/get_websocket")
+        print("📞 TWILIO SETUP:")
+        print(f"   Incoming Call URL: {public_url}/twilio/voice")
+        print(f"   WebSocket Handler: {public_url}/media/<call_sid>")
         print()
-        print("🔧 EXOTEL FLOW:")
-        print("   Greeting → Voicebot")
-        print("   ✅ Direct audio streaming")
+        print("🔧 TWILIO FLOW:")
+        print("   TwiML → Bidirectional Media Streams")
+        print("   ✅ μ-law audio streaming (WebSocket)")
+        print("   ✅ Real-time audio processing")
         print()
     else:
         print("⚠️ Running without ngrok")

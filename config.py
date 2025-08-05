@@ -23,11 +23,6 @@ class Config:
     TWILIO_PHONE = os.getenv('TWILIO_PHONE')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
     
-    # Exotel API Settings (Primary telephony provider for India)
-    EXOTEL_ACCOUNT_SID = os.getenv('EXOTEL_ACCOUNT_SID')
-    EXOTEL_API_TOKEN = os.getenv('EXOTEL_API_TOKEN')
-    EXOTEL_PHONE = os.getenv('EXOTEL_PHONE')
-    
     # ElevenLabs Voice Settings
     VOICE_ID = "i4rWMMrtruhUSVvwWOr5"  # Nisha's voice - school receptionist
     
@@ -44,7 +39,7 @@ class Config:
     FLASK_DEBUG = False
     
     # File Paths
-    AUDIO_FOLDER = "audio_pcm/"
+    AUDIO_FOLDER = "audio_ulaw/"
     LOGS_FOLDER = "logs/"
     TEMP_FOLDER = "temp/"
     
@@ -89,17 +84,9 @@ class Config:
         if not any(getattr(cls, api) for api in ai_apis):
             raise ValueError("At least one AI API key required: OPENAI_API_KEY, GROQ_API_KEY, or GEMINI_API_KEY")
         
-        # Optional: Either Twilio or Exotel for telephony (at least one required)
-        telephony_apis = [
-            ('TWILIO_ACCOUNT_SID', 'TWILIO_AUTH_TOKEN'),
-            ('EXOTEL_ACCOUNT_SID', 'EXOTEL_API_TOKEN')
-        ]
-        has_telephony = any(
-            all(getattr(cls, api) for api in api_pair) 
-            for api_pair in telephony_apis
-        )
-        if not has_telephony:
-            raise ValueError("Either Twilio (TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN) or Exotel (EXOTEL_ACCOUNT_SID, EXOTEL_API_TOKEN) configuration required")
+        # Twilio for telephony (required)
+        if not all([cls.TWILIO_ACCOUNT_SID, cls.TWILIO_AUTH_TOKEN]):
+            raise ValueError("Twilio configuration required: TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN")
         
         missing_vars = []
         for var in required_vars:

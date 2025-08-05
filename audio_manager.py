@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-KLARIQO AUDIO MANAGEMENT MODULE - PCM VERSION
-Handles loading, caching, and serving of PCM audio files (pre-converted for Exotel)
+KLARIQO AUDIO MANAGEMENT MODULE - μ-LAW VERSION
+Handles loading, caching, and serving of μ-law audio files (pre-converted for Twilio)
 """
 
 import os
@@ -10,13 +10,13 @@ from flask import Response
 from config import Config
 
 class AudioManager:
-    """Manages PCM audio file library and serving with ULTRA-FAST memory caching"""
+    """Manages μ-law audio file library and serving with ULTRA-FAST memory caching"""
     
     def __init__(self):
-        self.audio_folder = "audio_pcm"  # Changed to PCM folder
+        self.audio_folder = "audio_ulaw"  # Changed to μ-law folder
         self.audio_snippets = self._load_audio_snippets()
         self.cached_files = set()
-        self.memory_cache = {}  # 🚀 IN-MEMORY PCM FILE CACHE
+        self.memory_cache = {}  # 🚀 IN-MEMORY μ-LAW FILE CACHE
         self._cache_loaded = False  # Prevent double loading
     
     def _load_audio_snippets(self):
@@ -32,62 +32,62 @@ class AudioManager:
             return {}
     
     def _load_all_files_into_memory(self):
-        """🚀 LOAD ALL PCM FILES INTO RAM FOR INSTANT SERVING"""
+        """🚀 LOAD ALL μ-LAW FILES INTO RAM FOR INSTANT SERVING"""
         # FIXED: Only load once
         if self._cache_loaded:
             return
             
         if not os.path.exists(self.audio_folder):
             os.makedirs(self.audio_folder, exist_ok=True)
-            print(f"📁 Created PCM folder: {self.audio_folder}")
+            print(f"📁 Created μ-law folder: {self.audio_folder}")
         
-        # Get all audio files referenced in the JSON (but look for .pcm versions)
+        # Get all audio files referenced in the JSON (but look for .ulaw versions)
         all_files = set()
         for category, files in self.audio_snippets.items():
             if category == "quick_responses":
                 for filename in files.values():
-                    # Convert MP3 filename to PCM filename
-                    pcm_filename = filename.replace('.mp3', '.pcm')
-                    all_files.add(pcm_filename)
+                    # Convert MP3 filename to μ-law filename
+                    ulaw_filename = filename.replace('.mp3', '.ulaw')
+                    all_files.add(ulaw_filename)
             else:
                 for filename in files.keys():
-                    # Convert MP3 filename to PCM filename
-                    pcm_filename = filename.replace('.mp3', '.pcm')
-                    all_files.add(pcm_filename)
+                    # Convert MP3 filename to μ-law filename
+                    ulaw_filename = filename.replace('.mp3', '.ulaw')
+                    all_files.add(ulaw_filename)
         
-        # Load PCM files directly into memory
+        # Load μ-law files directly into memory
         loaded_count = 0
         missing_count = 0
         total_size = 0
         
-        for pcm_filename in all_files:
-            file_path = os.path.join(self.audio_folder, pcm_filename)
+        for ulaw_filename in all_files:
+            file_path = os.path.join(self.audio_folder, ulaw_filename)
             
             if os.path.exists(file_path):
                 try:
                     with open(file_path, 'rb') as f:
-                        pcm_data = f.read()
+                        ulaw_data = f.read()
                     
                     # Store original MP3 filename as key (for compatibility)
-                    mp3_filename = pcm_filename.replace('.pcm', '.mp3')
-                    self.memory_cache[mp3_filename] = pcm_data
+                    mp3_filename = ulaw_filename.replace('.ulaw', '.mp3')
+                    self.memory_cache[mp3_filename] = ulaw_data
                     self.cached_files.add(mp3_filename)
                     
                     loaded_count += 1
-                    total_size += len(pcm_data)
+                    total_size += len(ulaw_data)
                         
                 except Exception as e:
-                    print(f"❌ Failed to cache {pcm_filename}: {e}")
+                    print(f"❌ Failed to cache {ulaw_filename}: {e}")
                     missing_count += 1
             else:
-                print(f"⚠️ Missing PCM file: {pcm_filename}")
+                print(f"⚠️ Missing μ-law file: {ulaw_filename}")
                 missing_count += 1
         
         # Simple summary only
         size_mb = total_size / (1024 * 1024)
-        print(f"🎵 PCM cache: {loaded_count} files loaded ({size_mb:.1f}MB)")
+        print(f"🎵 μ-law cache: {loaded_count} files loaded ({size_mb:.1f}MB)")
         if missing_count > 0:
-            print(f"⚠️ {missing_count} PCM files missing")
+            print(f"⚠️ {missing_count} μ-law files missing")
         
         # Mark as loaded to prevent double loading
         self._cache_loaded = True
@@ -124,24 +124,24 @@ class AudioManager:
         return None
     
     def serve_audio_file(self, filename):
-        """🚀 SERVE PCM FILE FROM MEMORY CACHE (ULTRA-FAST!)"""
+        """🚀 SERVE μ-LAW FILE FROM MEMORY CACHE (ULTRA-FAST!)"""
         if filename in self.memory_cache:
-            # Serve PCM data directly from memory - INSTANT!
-            pcm_data = self.memory_cache[filename]
+            # Serve μ-law data directly from memory - INSTANT!
+            ulaw_data = self.memory_cache[filename]
             
             return Response(
-                pcm_data,
+                ulaw_data,
                 mimetype='application/octet-stream',  # Raw binary data
                 headers={
-                    'Content-Length': str(len(pcm_data)),
+                    'Content-Length': str(len(ulaw_data)),
                     'Cache-Control': 'public, max-age=3600',
                     'Accept-Ranges': 'bytes',
-                    'X-Served-From': 'memory-cache-pcm'  # Debug header
+                    'X-Served-From': 'memory-cache-ulaw'  # Debug header
                 }
             )
         else:
-            print(f"❌ PCM file not in memory cache: {filename}")
-            return Response("PCM file not found in cache", status=404)
+            print(f"❌ μ-law file not in memory cache: {filename}")
+            return Response("μ-law file not found in cache", status=404)
     
     def validate_audio_chain(self, audio_chain):
         """Validate that all PCM files in an audio chain exist in memory cache"""
@@ -202,8 +202,8 @@ class AudioManager:
         
         print(f"🗑️ PCM memory cache cleared: {file_count} files, {cache_size_mb:.1f}MB freed")
     
-    def get_pcm_data(self, filename):
-        """Get raw PCM data for a file from memory cache (ready for Exotel)"""
+    def get_ulaw_data(self, filename):
+        """Get raw μ-law data for a file from memory cache (ready for Twilio)"""
         return self.memory_cache.get(filename)
     
     def add_audio_file(self, filename, transcript, category):

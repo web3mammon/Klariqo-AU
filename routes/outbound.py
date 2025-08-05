@@ -67,15 +67,11 @@ def handle_outbound_call(parent_id):
     selected_intro = "nisha_introduction_outbound.mp3"
     session.session_memory["intro_played"] = True
     
-    # Play intro audio
-    intro_url = f"{request.url_root}audio_pcm/{selected_intro}"
-    print(f"🎵 Playing intro: {intro_url}")
-    response.play(intro_url)
+    # Store selected intro for WebSocket streaming
+    session.selected_intro = selected_intro
     
-    # Log the intro response
-    call_logger.log_nisha_audio_response(call_sid, selected_intro)
-    
-    # Connect to WebSocket for real-time streaming
+    # Connect directly to WebSocket for bidirectional streaming  
+    # Intro will be sent via WebSocket stream
     connect = Connect()
     stream = Stream(url=f'wss://{request.host}/media/{call_sid}')
     connect.append(stream)
@@ -118,7 +114,7 @@ def continue_outbound_conversation(call_sid):
             # Validate all files exist
             if audio_manager.validate_audio_chain(content):
                 for audio_file in audio_files:
-                    audio_url = f"{request.url_root}audio_pcm/{audio_file}"
+                    audio_url = f"{request.url_root}audio_ulaw/{audio_file}"
                     twiml_response.play(audio_url)
                 
                 # Log audio response
