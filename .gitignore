@@ -51,6 +51,10 @@ Thumbs.db
 logs/
 *.csv
 
+# Customer data (sensitive information)
+customer_data/
+customer_sessions.csv
+
 # Temporary files
 temp/
 tmp/

@@ -15,6 +15,7 @@ import struct
 import wave
 import tempfile
 import subprocess
+import csv
 from flask import Flask, request, send_file
 from flask_sock import Sock
 from deepgram import (
@@ -31,6 +32,7 @@ from router import response_router
 from tts_engine import tts_engine
 from audio_manager import audio_manager
 from logger import call_logger
+from session_data_exporter import session_exporter
 
 # Import route blueprints
 from routes.inbound import inbound_bp
@@ -63,14 +65,18 @@ current_ngrok_url = None
 @app.route("/", methods=['GET'])
 def health_check():
     """Health check endpoint"""
+    # Get session export statistics
+    export_stats = session_exporter.get_export_stats()
+    
     return f"""
     <h1>🔧 Pete's Plumbing - AI Voice Assistant (Jason)</h1>
     <p><strong>Status:</strong> ✅ Running</p>
     <p><strong>Active Sessions:</strong> {session_manager.get_active_count()}</p>
     <p><strong>Audio Files Cached:</strong> {len(audio_manager.memory_cache)}</p>
     <p><strong>Available Appointments:</strong> August 2024 slots active</p>
+    <p><strong>Customer Data Exported:</strong> {export_stats['total_sessions']} sessions ({export_stats.get('file_size_kb', 0)} KB)</p>
     <br>    
-    <p><a href="/test">🧪 Test Page</a></p>
+    <p><a href="/test">🧪 Test Page</a> | <a href="/customer-data">📊 Customer Data</a></p>
     """
 
 
@@ -288,10 +294,20 @@ def media_stream(ws, call_sid):
         print(f"❌ WebSocket error for {call_sid}: {e}")
         
     finally:
+        # Export session data before cleanup
+        try:
+            if session:
+                session_exporter.export_session_data(session)
+        except Exception as e:
+            print(f"⚠️ Error exporting session data: {e}")
+        
         # Cleanup session
         if session.dg_connection:
             session.dg_connection.finish()
             session.dg_connection = None
+        
+        # Remove session from manager
+        session_manager.remove_session(call_sid)
 
 def process_and_respond_twilio_stream(transcript, call_sid, ws, stream_sid):
     """Process input and respond with bidirectional μ-law streaming"""
@@ -391,6 +407,81 @@ def serve_logs(filename):
             return "Log file not found", 404
     except Exception as e:
         return f"Error serving log: {e}", 500
+
+@app.route("/customer-data")
+def customer_data_dashboard():
+    """Customer data dashboard and download"""
+    try:
+        export_stats = session_exporter.get_export_stats()
+        csv_path = export_stats.get('csv_file', '')
+        
+        if os.path.exists(csv_path):
+            # Read recent entries for preview
+            recent_entries = []
+            try:
+                with open(csv_path, 'r', encoding='utf-8') as csvfile:
+                    reader = csv.DictReader(csvfile)
+                    rows = list(reader)
+                    recent_entries = rows[-10:] if rows else []  # Last 10 entries
+            except Exception as e:
+                recent_entries = []
+            
+            # Generate HTML dashboard
+            html = f"""
+            <h1>📊 Pete's Plumbing - Customer Data Dashboard</h1>
+            <p><strong>Total Sessions:</strong> {export_stats['total_sessions']}</p>
+            <p><strong>File Size:</strong> {export_stats.get('file_size_kb', 0)} KB</p>
+            <p><a href="/download-customer-data">📥 Download CSV File</a></p>
+            <br>
+            <h3>Recent Customer Sessions (Last 10):</h3>
+            <table border="1" style="border-collapse: collapse; width: 100%;">
+                <tr style="background-color: #f0f0f0;">
+                    <th>Date</th><th>Customer</th><th>Service</th><th>Phone</th><th>Booking Status</th>
+                </tr>
+            """
+            
+            for entry in reversed(recent_entries):  # Show newest first
+                html += f"""
+                <tr>
+                    <td>{entry.get('call_date', '')}</td>
+                    <td>{entry.get('customer_name', 'Unknown')}</td>
+                    <td>{entry.get('service_type', 'General')}</td>
+                    <td>{entry.get('customer_phone', '')}</td>
+                    <td>{entry.get('booking_status', '')}</td>
+                </tr>
+                """
+            
+            html += """
+            </table>
+            <br>
+            <p><a href="/">← Back to Dashboard</a></p>
+            """
+            
+            return html
+        else:
+            return """
+            <h1>📊 Customer Data Dashboard</h1>
+            <p>No customer data available yet. Make some test calls to generate data!</p>
+            <p><a href="/">← Back to Dashboard</a></p>
+            """
+            
+    except Exception as e:
+        return f"Error loading customer data: {e}", 500
+
+@app.route("/download-customer-data")
+def download_customer_data():
+    """Download customer data CSV file"""
+    try:
+        export_stats = session_exporter.get_export_stats()
+        csv_path = export_stats.get('csv_file', '')
+        
+        if os.path.exists(csv_path):
+            return send_file(csv_path, as_attachment=True, download_name="pete_plumbing_customer_data.csv")
+        else:
+            return "Customer data file not found", 404
+            
+    except Exception as e:
+        return f"Error downloading customer data: {e}", 500
 
 def test_audio_cache():
     """Test audio cache availability"""
