@@ -573,23 +573,486 @@ RESTAURANT_AVAILABILITY = {
 }
 ```
 
+**Staff Update Process:**
+```
+1. Open config.py file
+2. Find the DOCTOR_AVAILABILITY section
+3. Update the "available_slots" array
+4. Change "last_updated" timestamp
+5. Save file and restart system: py main.py
+```
+
+### **Option 3: Excel + Auto-Converter System**
+
+For businesses already comfortable with Excel:
+
+Create `availability_data.xlsx`:
+
+| Date | Time | Service | Doctor | Status | Notes |
+|------|------|---------|---------|---------|-------|
+| 2024-01-18 | 11:30 AM | Dental | Dr. Smith | Available | Regular checkup |
+| 2024-01-19 | 2:00 PM | General | Dr. Jones | Available | New patients OK |
+| 2024-01-22 | 10:00 AM | Consultation | Dr. Smith | Booked | Follow-up |
+
+**Auto-converter script (`excel_to_availability.py`):**
+
+```python
+#!/usr/bin/env python3
+"""
+EXCEL TO AVAILABILITY CONVERTER
+Converts Excel availability data to JSON for the AI system
+"""
+
+import pandas as pd
+import json
+from datetime import datetime
+import os
+
+class AvailabilityConverter:
+    """Converts Excel availability data to system-readable JSON"""
+    
+    def __init__(self, excel_file="availability_data.xlsx"):
+        self.excel_file = excel_file
+        self.output_file = "dynamic_data.json"
+    
+    def convert_excel_to_json(self):
+        """Convert Excel file to JSON availability data"""
+        try:
+            print(f"📊 Reading Excel file: {self.excel_file}")
+            
+            # Read Excel file
+            df = pd.read_excel(self.excel_file)
+            
+            # Filter only available slots
+            available_df = df[df['Status'].str.lower() == 'available']
+            
+            # Convert to our format
+            available_slots = []
+            for _, row in available_df.iterrows():
+                slot = {
+                    "datetime": f"{row['Date']}T{self._convert_time_format(row['Time'])}:00",
+                    "display": f"{self._format_date_display(row['Date'])} {row['Time']}",
+                    "service": row['Service'].lower(),
+                    "doctor": row['Doctor'],
+                    "notes": row.get('Notes', '')
+                }
+                available_slots.append(slot)
+            
+            # Create JSON structure
+            json_data = {
+                "doctor_availability": {
+                    "last_updated": datetime.now().isoformat(),
+                    "updated_by": "Excel Auto-Converter",
+                    "source_file": self.excel_file,
+                    "available_slots": available_slots,
+                    "total_slots": len(available_slots)
+                }
+            }
+            
+            # Save to JSON
+            with open(self.output_file, 'w') as f:
+                json.dump(json_data, f, indent=2)
+            
+            print(f"✅ Converted {len(available_slots)} slots to {self.output_file}")
+            return True
+            
+        except Exception as e:
+            print(f"❌ Conversion failed: {e}")
+            return False
+    
+    def _convert_time_format(self, time_str):
+        """Convert '11:30 AM' to '11:30' 24-hour format"""
+        try:
+            time_obj = datetime.strptime(str(time_str), '%I:%M %p')
+            return time_obj.strftime('%H:%M')
+        except:
+            return str(time_str)
+    
+    def _format_date_display(self, date_obj):
+        """Convert date to display format like 'Thursday'"""
+        try:
+            if isinstance(date_obj, str):
+                date_obj = datetime.strptime(date_obj, '%Y-%m-%d')
+            return date_obj.strftime('%A')  # Thursday, Friday, etc.
+        except:
+            return str(date_obj)
+    
+    def auto_watch_and_convert(self):
+        """Watch Excel file for changes and auto-convert"""
+        import time
+        
+        last_modified = 0
+        print(f"👀 Watching {self.excel_file} for changes...")
+        
+        while True:
+            try:
+                if os.path.exists(self.excel_file):
+                    current_modified = os.path.getmtime(self.excel_file)
+                    
+                    if current_modified > last_modified:
+                        print("🔄 Excel file updated, converting...")
+                        if self.convert_excel_to_json():
+                            print("✅ Auto-conversion complete!")
+                        last_modified = current_modified
+                
+                time.sleep(30)  # Check every 30 seconds
+                
+            except KeyboardInterrupt:
+                print("👋 Stopping file watcher")
+                break
+            except Exception as e:
+                print(f"⚠️ Watcher error: {e}")
+                time.sleep(30)
+
+# Usage
+if __name__ == "__main__":
+    converter = AvailabilityConverter()
+    
+    print("Choose option:")
+    print("1. Convert Excel to JSON once")
+    print("2. Watch Excel file and auto-convert on changes")
+    
+    choice = input("Enter choice (1 or 2): ")
+    
+    if choice == "1":
+        converter.convert_excel_to_json()
+    elif choice == "2":
+        converter.auto_watch_and_convert()
+    else:
+        print("Invalid choice")
+```
+
+**Staff Workflow:**
+```
+1. Staff updates availability_data.xlsx (familiar Excel interface)
+2. Saves Excel file
+3. Auto-converter detects change and updates JSON
+4. AI system automatically uses new data
+5. No technical knowledge required!
+```
+
+### **Option 4: WhatsApp Bot Updates (Advanced)**
+
+For real-time updates via WhatsApp messages:
+
+```python
+# whatsapp_updater.py (Advanced implementation)
+"""
+WHATSAPP AVAILABILITY UPDATER
+Updates availability via WhatsApp messages from staff
+"""
+
+from twilio.rest import Client
+import re
+import json
+from datetime import datetime
+
+class WhatsAppUpdater:
+    """Handle availability updates via WhatsApp"""
+    
+    def __init__(self):
+        self.twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
+        self.authorized_numbers = ["+61XXXXXXXXX"]  # Staff phone numbers
+    
+    def process_whatsapp_message(self, from_number, message_body):
+        """Process incoming WhatsApp message for availability updates"""
+        
+        if from_number not in self.authorized_numbers:
+            return "Unauthorized number"
+        
+        # Parse commands like:
+        # "ADD Thursday 2PM dental Dr Smith"
+        # "REMOVE Friday 11AM" 
+        # "BLOCK January 26 holiday"
+        
+        message = message_body.upper().strip()
+        
+        if message.startswith("ADD"):
+            return self._handle_add_slot(message)
+        elif message.startswith("REMOVE"):
+            return self._handle_remove_slot(message)
+        elif message.startswith("BLOCK"):
+            return self._handle_block_date(message)
+        elif message.startswith("STATUS"):
+            return self._handle_status_request()
+        else:
+            return self._send_help_message()
+    
+    def _handle_add_slot(self, message):
+        """Handle ADD commands"""
+        # Parse: "ADD THURSDAY 2PM DENTAL DR SMITH"
+        parts = message.split()
+        if len(parts) >= 4:
+            day = parts[1]
+            time = parts[2]
+            service = parts[3] if len(parts) > 3 else "GENERAL"
+            
+            # Add to availability data
+            # Implementation details...
+            return f"✅ Added {day} {time} {service} appointment"
+        
+        return "❌ Invalid ADD format. Use: ADD Thursday 2PM dental"
+    
+    def _send_help_message(self):
+        """Send help message with available commands"""
+        return """
+🤖 AVAILABILITY BOT COMMANDS:
+
+ADD Thursday 2PM dental - Add appointment slot
+REMOVE Friday 11AM - Remove slot  
+BLOCK Jan 26 holiday - Block entire day
+STATUS - Show current availability
+
+Example: ADD Monday 10AM general Dr Smith
+        """
+
+# WhatsApp webhook handler in main.py
+@app.route("/whatsapp/webhook", methods=['POST'])
+def whatsapp_webhook():
+    """Handle incoming WhatsApp messages for availability updates"""
+    from_number = request.form.get('From')
+    message_body = request.form.get('Body')
+    
+    updater = WhatsAppUpdater()
+    response = updater.process_whatsapp_message(from_number, message_body)
+    
+    # Send response back via WhatsApp
+    updater.twilio_client.messages.create(
+        body=response,
+        from_='whatsapp:+14155238886',  # Twilio WhatsApp number
+        to=from_number
+    )
+    
+    return "OK"
+```
+
+**Staff Usage:**
+```
+Staff texts WhatsApp bot:
+"ADD Thursday 2PM dental Dr Smith"
+
+Bot responds:
+"✅ Added Thursday 2PM dental appointment"
+
+Next customer call immediately gets updated availability!
+```
+
+---
+
+## 📊 **Comprehensive Method Comparison**
+
+### **Manual Update Methods Overview**
+
+| Method | Difficulty | Setup Time | Real-time Updates | Staff Training | Best For |
+|--------|------------|------------|-------------------|----------------|----------|
+| **JSON File** | Easy | 30 mins | Yes (auto-reload) | 15 mins | Most businesses |
+| **Config Variables** | Very Easy | 15 mins | No (restart needed) | 5 mins | Simple cases |
+| **Excel + Converter** | Medium | 2 hours | Yes (auto-watch) | None (familiar) | Excel-savvy staff |
+| **WhatsApp Bot** | Advanced | 1 day | Yes (instant) | 10 mins | Tech-forward clients |
+
+### **Detailed Method Analysis**
+
+#### **🏆 Option 1: JSON File (RECOMMENDED)**
+**Best for:** 80% of businesses
+
+✅ **Pros:**
+- No system restart required
+- Real-time updates (auto-reload)
+- Flexible data structure
+- Version control friendly
+- Easy backup and restore
+
+❌ **Cons:**
+- Staff needs basic JSON syntax knowledge
+- Possible syntax errors if not careful
+
+**Client Types:**
+- Small to medium businesses
+- Staff comfortable with basic tech
+- Need frequent availability updates
+
+**Sample JSON for different businesses:**
+```json
+{
+  "doctor_availability": {...},
+  "restaurant_reservations": {...}, 
+  "salon_appointments": {...},
+  "service_bookings": {...}
+}
+```
+
+#### **⚡ Option 2: Config Variables**
+**Best for:** Very simple, rarely changing data
+
+✅ **Pros:**
+- Extremely simple for staff
+- No learning curve
+- Direct Python variables
+- Can't break JSON syntax
+
+❌ **Cons:**
+- Requires system restart
+- Not suitable for frequent updates
+- Limited flexibility
+
+**Client Types:**
+- Very small businesses
+- Infrequent availability changes
+- Non-technical staff
+- Fixed schedule businesses
+
+#### **📊 Option 3: Excel + Auto-Converter**
+**Best for:** Businesses already using Excel
+
+✅ **Pros:**
+- Staff already know Excel
+- Familiar interface
+- Auto-conversion to JSON
+- Can handle complex data
+- Built-in data validation
+
+❌ **Cons:**
+- Requires pandas dependency
+- More complex setup
+- Excel file can get corrupted
+- Conversion delays (30 seconds)
+
+**Client Types:**
+- Medical practices with patient management
+- Restaurants with complex booking rules
+- Services with detailed appointment data
+- Businesses with existing Excel workflows
+
+#### **💬 Option 4: WhatsApp Bot (ADVANCED)**
+**Best for:** Tech-savvy, high-frequency update businesses
+
+✅ **Pros:**
+- Instant real-time updates
+- Mobile-first approach
+- Natural language commands
+- Works from anywhere
+- Audit trail of changes
+
+❌ **Cons:**
+- Complex development
+- Requires WhatsApp Business API
+- Command syntax to learn
+- Potential for mistakes in messages
+
+**Client Types:**
+- Restaurants with daily menu changes
+- Event venues with frequent bookings
+- Emergency services
+- High-volume appointment businesses
+
+### **Implementation Decision Matrix**
+
+Use this to choose the right method for each client:
+
+| Client Characteristic | Recommended Method |
+|----------------------|-------------------|
+| **Small dental practice, basic updates** | JSON File |
+| **Hair salon, Excel-comfortable staff** | Excel + Converter |
+| **Restaurant, tech-savvy owner** | WhatsApp Bot |
+| **Simple service, fixed schedule** | Config Variables |
+| **Medical center, complex scheduling** | Excel + Converter or API |
+| **Event venue, frequent changes** | WhatsApp Bot or API |
+
+### **Mixed Approach Strategy**
+
+You can also combine methods for different clients:
+
+```python
+# config.py - Support multiple update methods
+UPDATE_METHOD = os.getenv('UPDATE_METHOD', 'json')  # json, config, excel, whatsapp
+
+if UPDATE_METHOD == 'json':
+    from manual_data_manager import manual_data as data_source
+elif UPDATE_METHOD == 'excel':
+    from excel_converter import excel_data as data_source
+elif UPDATE_METHOD == 'whatsapp':
+    from whatsapp_updater import whatsapp_data as data_source
+else:  # config
+    data_source = MANUAL_AVAILABILITY_DATA
+```
+
+This allows you to choose the best method per client without changing the core system!
+
+### **Client Communication Strategy**
+
+**For Non-API Clients, you'll need regular communication with staff:**
+
+#### **Daily/Weekly Check-ins:**
+```
+1. 📞 WhatsApp/Call client: "Hi Sarah, any schedule changes this week?"
+2. 📝 Staff updates: "Dr. Smith off Friday, added Saturday morning slots"
+3. 🔄 You update data (JSON/Excel/Config): Remove Friday, add Saturday
+4. ✅ System automatically uses new data for customer calls
+5. 📊 Send weekly report: "Updated 12 slots, 45 calls handled"
+```
+
+#### **Emergency Updates:**
+```
+1. 🚨 Staff texts: "URGENT - Dr. canceled all afternoon appointments"  
+2. ⚡ You immediately update data file
+3. 📞 System stops offering those slots within 1 minute
+4. 💬 Confirm: "Updated! No more afternoon bookings offered"
+```
+
+#### **Client Training Materials:**
+
+**For JSON Method:**
+```
+STAFF INSTRUCTIONS - UPDATING APPOINTMENTS:
+
+1. Open dynamic_data.json on computer
+2. Find "available_slots" section  
+3. Add/remove appointment times
+4. Update "last_updated" with current date/time
+5. Update "updated_by" with your name
+6. Save file - system updates automatically!
+
+EXAMPLE:
+"available_slots": [
+  "Thursday 11:30 AM",    ← Add new slot
+  "Friday 2:00 PM"        ← Remove canceled slot
+]
+```
+
+**For Excel Method:**
+```
+STAFF INSTRUCTIONS - EXCEL UPDATES:
+
+1. Open availability_data.xlsx
+2. Update Status column: "Available" or "Booked"
+3. Add new rows for new time slots
+4. Save Excel file
+5. System auto-converts to AI format!
+
+NO TECHNICAL KNOWLEDGE NEEDED!
+```
+
+**For Config Method:**
+```
+STAFF INSTRUCTIONS - SIMPLE UPDATES:
+
+1. Open config.py file
+2. Find DOCTOR_AVAILABILITY section
+3. Update the appointment times in quotes
+4. Save file
+5. Text me to restart system
+
+EXAMPLE:
+DOCTOR_AVAILABLE_TIMES = ["11:30 AM", "2:00 PM", "Monday 10 AM"]
+```
+
 ### **Staff Update Workflow**
 
 1. **Staff receives new booking/cancellation**
-2. **Updates `dynamic_data.json` file**
-3. **System automatically detects changes**
+2. **Updates data using their assigned method** (JSON/Excel/Config/WhatsApp)
+3. **System automatically detects changes** (or restart for config method)
 4. **Next customer call gets updated availability**
-
-**Example staff instructions:**
-```
-TO UPDATE DOCTOR AVAILABILITY:
-1. Open dynamic_data.json file
-2. Update the "available_slots" section
-3. Change "last_updated" to current date/time
-4. Change "updated_by" to your name
-5. Save the file
-6. System will automatically use new data
-```
+5. **Weekly reporting to ensure data freshness**
 
 ---
 
