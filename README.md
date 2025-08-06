@@ -30,6 +30,8 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Session Management** - Handles concurrent calls with isolated state
 - **Hot Reloading** - Update audio library without system restart
 - **Debug Endpoints** - System health monitoring and troubleshooting
+- **Customer Data Export** - Automatic CSV export of customer information and booking details
+- **Business Analytics Dashboard** - Real-time customer data visualization and download
 
 ## 🎯 What This Does
 
@@ -40,6 +42,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Dynamic contextual responses** based on gathered information (industry-specific details)
 - Falls back to **real-time TTS** (with μ-law conversion) only when needed
 - **Excel-driven content management** for easy updates by business staff
+- **Automatic customer data collection** and CSV export for business reporting
 - Logs every conversation for analysis and improvement
 - **Twilio integration** optimized for Australian and New Zealand telephony systems
 
@@ -53,6 +56,8 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **17+ Professional Audio Responses**: Customizable for any industry
 - **Twilio Integration**: Optimized for AU/NZ telephony with proper μ-law format
 - **Comprehensive Logging**: Tracks all conversations for business analytics
+- **Customer Data Export**: Automatic collection and CSV export of customer information
+- **Business Dashboard**: Real-time customer data visualization and download
 
 ## 🔐 **IMPORTANT: Git & Audio Files Management**
 
@@ -88,6 +93,7 @@ temp/                   # Temporary files
 - 🏥 **Medical practices** - Appointments, billing, patient services
 - 🛒 **E-commerce** - Orders, returns, customer support
 - 🏫 **Educational institutions** - Admissions, events, parent inquiries
+- 🔧 **Plumbing/Service Businesses** - Emergency calls, appointment booking, service inquiries
 
 The guide covers:
 - ✅ **Content planning** for AU/NZ market requirements
@@ -96,6 +102,45 @@ The guide covers:
 - ✅ **Twilio configuration** for AU/NZ deployment
 - ✅ **Testing and validation** procedures
 - ✅ **Industry-specific examples** with local context
+
+## 📊 **Customer Data Export System**
+
+### **🎯 Business Intelligence Built-In**
+The system automatically collects and exports customer data for business reporting:
+
+**📋 Data Collected Per Call:**
+- **Customer Information**: Name, phone, location
+- **Service Details**: Type of service, urgency level, property type
+- **Booking Information**: Preferred dates/times, selected appointments
+- **Conversation Analysis**: Booking status, follow-up requirements
+- **Call Analytics**: Duration, conversation summary, business outcomes
+
+**📊 Export Features:**
+- **Automatic CSV Export**: Every call session saved to `customer_data/customer_sessions.csv`
+- **Business Dashboard**: View recent customers at `/customer-data`
+- **Download Reports**: Download full customer database anytime
+- **Follow-up Tracking**: Identifies customers needing callbacks
+- **Booking Analytics**: Track conversion rates and service preferences
+
+**🔗 Dashboard Access:**
+- **Health Check**: `http://localhost:5000/` - Shows export statistics
+- **Customer Data**: `http://localhost:5000/customer-data` - Recent customer sessions
+- **CSV Download**: `http://localhost:5000/download-customer-data` - Full customer database
+
+**💼 Client Benefits:**
+- **CRM Integration**: CSV files import into any CRM system
+- **Business Analytics**: Track customer patterns and service demand
+- **Follow-up Management**: Know who needs callbacks and why
+- **Performance Metrics**: Measure booking conversion rates
+- **Customer Database**: Build comprehensive customer profiles
+
+### **📈 Example Customer Data Output:**
+```csv
+call_sid,call_date,call_time,customer_name,customer_phone,service_type,booking_status
+CA123,2024-08-01,14:30:25,John Smith,0412345678,blocked_drain,Booked - Confirmed
+CA124,2024-08-01,15:45:12,Sarah Jones,,leaking_tap,Interested - No Booking
+CA125,2024-08-01,16:20:33,Mike Wilson,0498765432,emergency,Emergency - Immediate Service
+```
 
 ## 🏗️ Architecture
 

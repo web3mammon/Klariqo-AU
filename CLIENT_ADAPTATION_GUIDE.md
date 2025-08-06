@@ -8,10 +8,10 @@
 This guide helps freelancers/VAs clone and adapt the Klariqo AI Voice Assistant for **AU/NZ clients** across different industries using **Twilio μ-law streaming**:
 
 **🇦🇺 Perfect for Australian Businesses:**
-- 🏨 **Hotels in Melbourne/Sydney** → 🏡 **Real Estate in Brisbane/Perth** → 🏥 **Medical Centers** → 🛒 **E-commerce**
+- 🏨 **Hotels in Melbourne/Sydney** → 🏡 **Real Estate in Brisbane/Perth** → 🏥 **Medical Centers** → 🛒 **E-commerce** → 🔧 **Plumbing/Service Businesses**
 
 **🇳🇿 Perfect for New Zealand Businesses:**
-- 🏨 **Hotels in Auckland/Wellington** → 🏡 **Real Estate in Christchurch** → 🏫 **Education** → 🏢 **Professional Services**
+- 🏨 **Hotels in Auckland/Wellington** → 🏡 **Real Estate in Christchurch** → 🏫 **Education** → 🏢 **Professional Services** → 🔧 **Plumbing/Service Businesses**
 
 **Time Required:** 3-4 hours for complete adaptation  
 **Skills Needed:** Basic Git, Excel, Audio editing, Twilio account  
@@ -98,6 +98,25 @@ git push -u origin main
 
 # Session variables to track:
 # - property_type, location_preference, budget_range
+
+**For AU/NZ Plumbing/Service Businesses (Pete's Plumbing, etc.):**
+```bash
+# Common inquiries to cover:
+# - Emergency services & urgent repairs
+# - Appointment booking & availability
+# - Service types (drains, taps, toilets, hot water)
+# - Pricing & quotes
+# - Service areas & coverage
+# - Warranty & guarantees
+# - Payment methods & invoicing
+# - Follow-up services
+
+# Session variables to track:
+# - service_type, urgency_level, property_type
+# - customer_location, customer_name, customer_phone
+# - preferred_date, preferred_time, selected_appointment
+# - issue_description, previous_customer
+```
 # - buyer_type (first_home, investor, upgrader)
 # - inspection_availability, contact_method
 # - financing_status, timeline
@@ -278,6 +297,86 @@ voice_settings = VoiceSettings(
     use_speaker_boost=True   # Essential for clear phone audio
 )
 ```
+
+---
+
+## 📊 **PHASE 3.5: Customer Data Export Configuration (15 minutes)**
+
+### **Step 1: Configure Customer Data Collection**
+The system automatically exports customer data to CSV files. Configure for your client's business:
+
+**📋 Update Session Variables in `config.py`:**
+```python
+# For Plumbing Business (example):
+SESSION_VARIABLES_TEMPLATE = {
+    "customer_name": None,
+    "customer_phone": None,
+    "customer_location": None,
+    "service_type": None,  # "blocked_drain", "leaking_tap", "toilet_repair"
+    "urgency_level": None,  # "emergency", "urgent", "routine"
+    "property_type": None,  # "residential", "commercial", "unit"
+    "preferred_date": None,  # "today", "tomorrow", "this_week"
+    "preferred_time": None,  # "morning", "afternoon", "evening"
+    "selected_appointment": None,  # Final booked slot
+    "issue_description": None,
+    "previous_customer": None  # "yes", "no"
+}
+
+# For Hotel Business (example):
+SESSION_VARIABLES_TEMPLATE = {
+    "guest_name": None,
+    "guest_phone": None,
+    "check_in_date": None,
+    "check_out_date": None,
+    "room_type": None,  # "standard", "deluxe", "suite"
+    "guest_count": None,
+    "special_requests": None,
+    "budget_range": None,
+    "booking_status": None
+}
+```
+
+### **Step 2: Configure Business Availability Data**
+Add hardcoded availability data for testing dynamic booking:
+
+```python
+# In config.py - Add your client's availability:
+HOTEL_AVAILABILITY = {
+    "available_rooms": [
+        {"date": "2024-08-05", "room_type": "standard", "price": "$150"},
+        {"date": "2024-08-06", "room_type": "deluxe", "price": "$200"},
+        # Add more availability data
+    ]
+}
+
+PLUMBING_AVAILABILITY = {
+    "available_slots": [
+        {"date": "Monday, August 5th", "time": "8:00 AM - 10:00 AM", "slot_id": "MON05_0800"},
+        {"date": "Tuesday, August 6th", "time": "3:30 PM - 5:30 PM", "slot_id": "TUE06_1530"},
+        # Add more availability data
+    ]
+}
+```
+
+### **Step 3: Test Customer Data Export**
+```bash
+# 1. Start the system
+python main.py
+
+# 2. Make test calls and collect customer data
+# 3. Check customer data export:
+# - Visit: http://localhost:5000/customer-data
+# - Download: http://localhost:5000/download-customer-data
+
+# 4. Verify CSV file created: customer_data/customer_sessions.csv
+```
+
+**📊 Customer Data Features:**
+- **Automatic Export**: Every call session saved to CSV
+- **Business Dashboard**: View recent customers and statistics
+- **Follow-up Tracking**: Identifies customers needing callbacks
+- **CRM Integration**: CSV files import into any CRM system
+- **Analytics**: Track booking conversion rates and service preferences
 
 ---
 

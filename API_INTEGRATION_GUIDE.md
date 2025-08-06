@@ -46,7 +46,7 @@ Klariqo is a sophisticated AI voice assistant that:
 The system already tracks dynamic data through session variables:
 
 ```python
-# In config.py - Current session variables
+# In config.py - Current session variables (School Example)
 SESSION_VARIABLES_TEMPLATE = {
     "admission_type": None,      # "firsttime" or "transfer"
     "admission_class": None,     # "KG1", "Class 1", etc.
@@ -56,9 +56,42 @@ SESSION_VARIABLES_TEMPLATE = {
     "student_name": None,        # Student's name
     "inquiry_focus": None        # "fees", "admission", "transport"
 }
+
+# Plumbing Business Example (Current Implementation)
+SESSION_VARIABLES_TEMPLATE = {
+    "customer_name": None,       # Customer's name
+    "customer_phone": None,      # Phone number for booking
+    "customer_location": None,   # Suburb/area for scheduling
+    "service_type": None,        # "blocked_drain", "leaking_tap", "toilet_repair"
+    "urgency_level": None,       # "emergency", "urgent", "routine"
+    "property_type": None,       # "residential", "commercial", "unit"
+    "preferred_date": None,      # "today", "tomorrow", "this_week"
+    "preferred_time": None,      # "morning", "afternoon", "evening"
+    "selected_appointment": None, # Final booked appointment slot
+    "issue_description": None,   # Brief description of the issue
+    "previous_customer": None    # "yes", "no" - for repeat customer handling
+}
 ```
 
 **This same pattern can be extended for ANY business type!**
+
+### **📊 Customer Data Export System (Built-In)**
+
+The system now includes automatic customer data export:
+
+```python
+# Automatic CSV Export Features:
+# - Every call session saved to customer_data/customer_sessions.csv
+# - Business dashboard at /customer-data
+# - Download endpoint at /download-customer-data
+# - Follow-up tracking and booking analytics
+# - CRM integration ready
+
+# Example CSV Output:
+# call_sid,call_date,call_time,customer_name,customer_phone,service_type,booking_status
+# CA123,2024-08-01,14:30:25,John Smith,0412345678,blocked_drain,Booked - Confirmed
+# CA124,2024-08-01,15:45:12,Sarah Jones,,leaking_tap,Interested - No Booking
+```
 
 ---
 
@@ -836,6 +869,59 @@ Bot responds:
 
 Next customer call immediately gets updated availability!
 ```
+
+---
+
+## 📊 **Customer Data Export Integration**
+
+### **Combining Dynamic Data with Customer Export**
+
+The customer data export system works seamlessly with all dynamic data methods:
+
+**🔗 API Integration + Customer Export:**
+```python
+# When API provides real-time data, customer info is still exported
+def handle_doctor_appointment_booking(session):
+    # 1. Fetch real-time availability from API
+    available_slots = doctor_api.get_availability()
+    
+    # 2. Let customer choose from real slots
+    selected_slot = customer_chooses_slot(available_slots)
+    
+    # 3. Book appointment via API
+    booking_result = doctor_api.book_appointment(selected_slot, session.session_variables)
+    
+    # 4. Customer data automatically exported to CSV
+    # (This happens automatically when call ends)
+    
+    return f"Booked: {selected_slot} - Reference: {booking_result['ref']}"
+```
+
+**📋 Manual Updates + Customer Export:**
+```python
+# Even with manual data updates, customer info is exported
+def handle_plumbing_booking(session):
+    # 1. Use manually updated availability data
+    available_slots = Config.PLUMBING_AVAILABILITY['available_slots']
+    
+    # 2. Let customer choose from available slots
+    selected_slot = filter_slots_by_preference(available_slots, session.session_variables)
+    
+    # 3. Update manual availability (mark slot as booked)
+    mark_slot_as_booked(selected_slot)
+    
+    # 4. Customer data automatically exported to CSV
+    # (This happens automatically when call ends)
+    
+    return f"Booked: {selected_slot['date']} at {selected_slot['time']}"
+```
+
+**💼 Business Benefits:**
+- **Complete Customer Journey**: Track from inquiry to booking
+- **Data Analytics**: Analyze which services are most popular
+- **Follow-up Management**: Know who needs callbacks and why
+- **Performance Metrics**: Measure conversion rates and response times
+- **CRM Integration**: Export data to any CRM system
 
 ---
 
