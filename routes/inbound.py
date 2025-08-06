@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AVS INTERNATIONAL SCHOOL INBOUND CALL ROUTES
-Handles incoming calls from parents inquiring about admissions
+PETE'S PLUMBING INBOUND CALL ROUTES
+Handles incoming calls from customers inquiring about plumbing services
 """
 
 import os
@@ -29,19 +29,19 @@ def handle_incoming_call():
     caller = request.form.get('From', 'Unknown')
     call_sid = request.form.get('CallSid', 'unknown')
     
-    print(f"📞 INBOUND call from parent: {caller}")
+    print(f"📞 INBOUND call from customer: {caller}")
     
     # Log call start
     call_logger.log_call_start(call_sid, caller, "inbound")
     
-    # Create INBOUND session for parent inquiry
+    # Create INBOUND session for customer inquiry
     session = session_manager.create_session(call_sid, call_direction="inbound")
     
     # Build TwiML response
     response = VoiceResponse()
     
-    # Use school intro for parent calls
-    selected_intro = "school_intro.mp3"
+    # Use plumbing intro for customer calls
+    selected_intro = "plumbing_intro.mp3"
     
     # Mark intro as played in session memory
     session.session_memory["intro_played"] = True

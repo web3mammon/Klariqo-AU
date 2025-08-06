@@ -76,13 +76,13 @@ def convert_mp3_to_ulaw_file(mp3_path, ulaw_path):
 def convert_all_mp3_to_ulaw():
     """Convert all MP3 files to μ-law format"""
     
-    input_folders = ["audio_optimised/inbound", "audio_optimised/outbound"]
+    input_folders = ["audio_optimised"]
     output_folder = "audio_ulaw"
     
     # Create output folder
     os.makedirs(output_folder, exist_ok=True)
     
-    # Collect MP3 files from both inbound and outbound folders
+    # Collect MP3 files from folder
     mp3_files = []
     for input_folder in input_folders:
         if not os.path.exists(input_folder):

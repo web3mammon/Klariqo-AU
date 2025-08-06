@@ -180,6 +180,34 @@ ls audio_ulaw/  # Should show all your new .ulaw files
 # Each .ulaw file is ~50% smaller than equivalent PCM
 ```
 
+### **⚠️ CRITICAL STEP: Update Route Files (OFTEN MISSED!)**
+```bash
+# 🚨 IMPORTANT: After changing audio files, you MUST update the intro files in routes
+
+# 6. Update inbound call intro:
+# File: routes/inbound.py
+# Find line: selected_intro = "old_intro_file.mp3"
+# Change to: selected_intro = "your_new_intro_file.mp3"
+
+# Example for Pete's Plumbing:
+# OLD: selected_intro = "school_intro.mp3"
+# NEW: selected_intro = "plumbing_intro.mp3"
+
+# Example for Melbourne Hotel:
+# OLD: selected_intro = "school_intro.mp3"  
+# NEW: selected_intro = "melbourne_hotel_intro.mp3"
+
+# 7. Update outbound call intro (if using outbound calls):
+# File: routes/outbound.py
+# Find line: selected_intro = "old_outbound_intro.mp3"
+# Change to: selected_intro = "your_new_intro_file.mp3"
+
+# 🔧 Why this matters:
+# - The route files tell the system which audio file to play first
+# - If you don't update these, you'll get "audio not in cache" errors
+# - This is the most commonly missed step when adapting for new clients
+```
+
 ---
 
 ## ⚙️ **PHASE 3: Configuration Updates (30 minutes)**
@@ -393,6 +421,12 @@ cp .env .env.example
 
 ### **Audio File Issues**
 ```bash
+# 🚨 Problem: "❌ Intro audio not in cache: [filename].mp3" (MOST COMMON!)
+# Solution: Update route files! This is the #1 missed step
+#   - Edit routes/inbound.py: Change selected_intro = "your_new_intro.mp3"
+#   - Edit routes/outbound.py: Change selected_intro = "your_new_intro.mp3"
+#   - Make sure the filename matches what's in your audio_snippets.json
+
 # Problem: μ-law conversion fails
 # Solution: Check MP3 file quality, ensure librosa and audioop are installed
 
@@ -404,6 +438,9 @@ cp .env .env.example
 
 # Problem: Files too large for git
 # Solution: Use deployment options in main README, keep audio separate
+
+# Problem: Cache shows files loaded but none play
+# Solution: Check audio_snippets.json format, ensure MP3 filenames match .ulaw files
 ```
 
 ### **Configuration Issues**

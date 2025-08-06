@@ -63,8 +63,8 @@ def handle_outbound_call(parent_id):
     # Build TwiML response
     response = VoiceResponse()
     
-    # Use outbound intro for school calling parents
-    selected_intro = "nisha_introduction_outbound.mp3"
+    # Use plumbing intro for outbound calls (fallback)
+    selected_intro = "plumbing_intro.mp3"
     session.session_memory["intro_played"] = True
     
     # Store selected intro for WebSocket streaming

@@ -64,10 +64,11 @@ current_ngrok_url = None
 def health_check():
     """Health check endpoint"""
     return f"""
-    <h1>🏫 AVS International School - AI Voice Assistant</h1>
+    <h1>🔧 Pete's Plumbing - AI Voice Assistant (Jason)</h1>
     <p><strong>Status:</strong> ✅ Running</p>
     <p><strong>Active Sessions:</strong> {session_manager.get_active_count()}</p>
     <p><strong>Audio Files Cached:</strong> {len(audio_manager.memory_cache)}</p>
+    <p><strong>Available Appointments:</strong> August 2024 slots active</p>
     <br>    
     <p><a href="/test">🧪 Test Page</a></p>
     """
