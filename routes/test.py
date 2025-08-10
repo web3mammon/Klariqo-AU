@@ -30,7 +30,7 @@ def call_test(phone_number):
             
         lead_data = {
             'id': 'test_123',
-            'school_name': 'Test School Demo',
+            'customer_name': 'Test Customer Demo',
             'type': 'test'
         }
         
@@ -41,58 +41,44 @@ def call_test(phone_number):
         
         if call_sid:
             return f"""
-            <h2>✅ Klariqo School Demo Call Initiated!</h2>
-            <p><strong>Calling:</strong> {phone_number}</p>
-            <p><strong>Call ID:</strong> {call_sid}</p>
-            <p><strong>Agent:</strong> Nisha from Klariqo</p>
-            <p><strong>Status:</strong> Your phone should ring in 5-10 seconds!</p>
-            <br>
-            <p>🎭 <strong>Pretend to be a parent inquiring about admission!</strong></p>
-            <p>💡 Try asking: "2nd class admission fees?", "Bus route hai?", "Documents required?"</p>
-            <p>🏫 Experience the school reception system!</p>
-            <br>
-            <p><a href="/test">← Back to Test Page</a></p>
+            <h2>✅ Test Call Initiated!</h2>
+            <p><strong>Call SID:</strong> {call_sid}</p>
+            <p><strong>Phone:</strong> {phone_number}</p>
+            <p><strong>Customer:</strong> {lead_data['customer_name']}</p>
+            <p>Your phone should ring in 5-10 seconds!</p>
+            <p><a href="/test">← Back to Test Menu</a></p>
             """
         else:
-            return "<h2>❌ Failed to make call</h2><p>Check logs for errors</p>"
+            return f"""
+            <h2>❌ Call Failed</h2>
+            <p>Could not initiate call to {phone_number}</p>
+            <p><a href="/test">← Back to Test Menu</a></p>
+            """
             
     except Exception as e:
-        return f"<h2>❌ Error</h2><p>{str(e)}</p>"
+        return f"""
+        <h2>❌ Error</h2>
+        <p>Error: {str(e)}</p>
+        <p><a href="/test">← Back to Test Menu</a></p>
+        """
 
 @test_bp.route("/test")
 def test_page():
-    """Simple test page with system status"""
+    """Main test page with all testing options"""
+    return """
+    <h1>🧪 Klariqo Testing Dashboard</h1>
     
-    # Get system stats
-    active_sessions = session_manager.get_active_count()
-    call_stats = call_logger.get_call_stats(days=1)
-    audio_files = audio_manager.list_all_files()
-    audio_files_count = len([f for f in audio_files if f['exists']])
-    
-    # Test TTS
-    tts_status = "✅ Working" if tts_engine.test_voice() else "❌ Failed"
-    
-    return f"""
-    <h1>🚀 Klariqo School System - Ultra-Fast Streaming!</h1>
-    
-    <h3>📊 System Status:</h3>
+    <h3>📞 Test Outbound Calls:</h3>
+    <p>Test the outbound calling system:</p>
     <ul>
-        <li><strong>Active Sessions:</strong> {active_sessions}</li>
-        <li><strong>Audio Files Available:</strong> {audio_files_count}</li>
-        <li><strong>TTS Engine:</strong> {tts_status}</li>
-        <li><strong>Today's Calls:</strong> {call_stats.get('total_calls', 0)}</li>
-    </ul>
-    
-    <h3>📞 Test School Sales Call:</h3>
-    <p>Nisha will call you to pitch Klariqo:</p>
-    <ul>
-        <li><a href="/call_test/919876543210">Call +91-9876543210 (Update with your number)</a></li>
-        <li><a href="/call_test/919039832599">Call +91-9039832599</a></li>
+        <li><a href="/call_test/61412345678">Call +61-412-345-678 (Update with your number)</a></li>
+        <li><a href="/call_test/61487654321">Call +61-487-654-321</a></li>
     </ul>
     
     <h3>🎯 Campaign Management:</h3>
     <ul>
-        <li><a href="/outbound/start_campaign" onclick="return confirm('Start campaign?')">Start School Campaign (POST)</a></li>
+        <li><a href="/outbound/start_campaign" onclick="return confirm('Start campaign?')">Start Plumbing Campaign (POST)</a></li>
+        <li><a href="/outbound/start_csv_campaign" onclick="return confirm('Start CSV campaign?')">Start CSV Campaign (POST)</a></li>
         <li><a href="/outbound/campaign_status">View Campaign Status</a></li>
     </ul>
     
@@ -108,15 +94,22 @@ def test_page():
     <ol>
         <li>Click a test link above (update phone number first)</li>
         <li>Your phone should ring in 5-10 seconds</li>
-                    <li>Answer the call and pretend to be a parent asking about admission</li>
-        <li>Nisha will handle your school inquiry with ultra-fast responses!</li>
-        <li>Ask about fees, admission, timings, transport, etc!</li>
+        <li>Answer the call and pretend to be a customer asking about plumbing</li>
+        <li>Jason will handle your inquiry with personalized responses!</li>
+        <li>Ask about services, pricing, booking, etc!</li>
     </ol>
     
-    <p><strong>🏫 Experience professional school reception - at lightning speed!</strong></p>
+    <p><strong>👤 Customer Name Personalization:</strong></p>
+    <ul>
+        <li>When using CSV campaigns, Jason will know the customer's name</li>
+        <li>He'll use it for personalization (e.g., "Thanks John!")</li>
+        <li>Check the CSV file in <code>customer_data/leads.csv</code></li>
+    </ul>
+    
+    <p><strong>🔧 Experience professional plumbing service - with personalization!</strong></p>
     
     <hr>
-    <p><small>Klariqo v2.0 - Modular Architecture | Patent Pending</small></p>
+    <p><small>Klariqo v3.0 - Twilio μ-law Streaming | Patent Pending</small></p>
     """
 
 @test_bp.route("/debug/audio_files")

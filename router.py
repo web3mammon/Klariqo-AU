@@ -359,13 +359,19 @@ Remember: Always be helpful, professional, and ready to book appointments with a
         # Get current session context
         session_context = session.get_session_context()
         
+        # Check if customer name is available for personalization
+        customer_name = session.get_session_variable("customer_name")
+        personalization_note = ""
+        if customer_name and customer_name != "Customer":
+            personalization_note = f"\n👤 CUSTOMER NAME: {customer_name} - Use their name for personalization when appropriate"
+        
         context_prompt = f"""
 🧠 CONVERSATION MEMORY:
 Recently played files (DON'T repeat): {', '.join(recent_files)}
 Recent conversation: {recent_conversation}
 
 📋 CURRENT SESSION VARIABLES:
-{session_context}
+{session_context}{personalization_note}
 
 📝 CURRENT USER INPUT: "{user_input}"
 
@@ -375,6 +381,7 @@ Recent conversation: {recent_conversation}
 - If customer asks about booking/appointment, use GENERATE with available time slots
 - If customer_name and customer_phone are collected, proceed with booking confirmation
 - If customer confirms a time slot, finalize the booking
+- If customer_name is available, use it for personalization (e.g., "Thanks {customer_name}")
 
 Apply the rules from your system prompt. Choose appropriate files or GENERATE response for dynamic booking."""
         

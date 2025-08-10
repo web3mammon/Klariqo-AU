@@ -39,14 +39,30 @@ def handle_outbound_call(lead_id):
     print(f"🔍 DEBUG: CallSid={call_sid}")
     print(f"🔍 DEBUG: To={to_number}, From={from_number}")
     
-    # Get customer data (in real implementation, fetch from database)
-    customer_data = {
-        'id': lead_id, 
-        'customer_name': 'Customer', 
-        'type': 'lead',
-        'phone': to_number,
-        'call_purpose': 'service_inquiry'  # or 'follow_up', 'emergency_service', 'maintenance_reminder'
-    }
+    # Get customer data from session manager's tracked outbound calls
+    lead_data = session_manager.active_outbound_calls.get(call_sid, {})
+    
+    # If no lead data found, create default customer data
+    if not lead_data:
+        customer_data = {
+            'id': lead_id, 
+            'customer_name': 'Customer', 
+            'type': 'lead',
+            'phone': to_number,
+            'call_purpose': 'service_inquiry'
+        }
+    else:
+        # Use the actual customer data from CSV
+        customer_data = {
+            'id': lead_data.get('id', lead_id),
+            'customer_name': lead_data.get('customer_name', 'Customer'),
+            'type': lead_data.get('type', 'lead'),
+            'phone': to_number,
+            'address': lead_data.get('address', ''),
+            'service_needed': lead_data.get('service_needed', ''),
+            'notes': lead_data.get('notes', ''),
+            'call_purpose': 'service_inquiry'
+        }
     
     print(f"📞 OUTBOUND call to customer: {customer_data['customer_name']}")
     
@@ -59,6 +75,11 @@ def handle_outbound_call(lead_id):
         call_direction="outbound", 
         lead_data=customer_data
     )
+    
+    # Set the customer name in session variables for GPT to use
+    if customer_data.get('customer_name') and customer_data['customer_name'] != 'Customer':
+        session.update_session_variable("customer_name", customer_data['customer_name'])
+        print(f"👤 Customer name set in session: {customer_data['customer_name']}")
     
     # Build TwiML response
     response = VoiceResponse()
