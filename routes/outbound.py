@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """
-AVS INTERNATIONAL SCHOOL OUTBOUND CALL ROUTES  
-Handles outbound calls from school to parents for events and follow-ups
+PETE'S PLUMBING OUTBOUND CALL ROUTES  
+Handles outbound calls to potential customers for plumbing services
 """
 
 import os
@@ -26,9 +26,9 @@ outbound_bp = Blueprint('outbound', __name__)
 # Initialize Twilio client
 twilio_client = Client(Config.TWILIO_ACCOUNT_SID, Config.TWILIO_AUTH_TOKEN)
 
-@outbound_bp.route("/twilio/outbound/<parent_id>", methods=['GET', 'POST'])
-def handle_outbound_call(parent_id):
-    """Handle OUTBOUND calls from school to parents"""
+@outbound_bp.route("/twilio/outbound/<lead_id>", methods=['GET', 'POST'])
+def handle_outbound_call(lead_id):
+    """Handle OUTBOUND calls to potential customers"""
     
     # Extract call information (handle both GET and POST)
     call_sid = request.form.get('CallSid') or request.args.get('CallSid', 'unknown')
@@ -39,31 +39,31 @@ def handle_outbound_call(parent_id):
     print(f"🔍 DEBUG: CallSid={call_sid}")
     print(f"🔍 DEBUG: To={to_number}, From={from_number}")
     
-    # Get parent data (in real implementation, fetch from database)
-    parent_data = {
-        'id': parent_id, 
-        'parent_name': 'Parent/Guardian', 
-        'type': 'parent',
+    # Get customer data (in real implementation, fetch from database)
+    customer_data = {
+        'id': lead_id, 
+        'customer_name': 'Customer', 
+        'type': 'lead',
         'phone': to_number,
-        'call_purpose': 'event_invitation'  # or 'admission_followup', 'scholarship_info'
+        'call_purpose': 'service_inquiry'  # or 'follow_up', 'emergency_service', 'maintenance_reminder'
     }
     
-    print(f"📞 OUTBOUND call to parent: {parent_data['parent_name']}")
+    print(f"📞 OUTBOUND call to customer: {customer_data['customer_name']}")
     
     # Log call start
-    call_logger.log_call_start(call_sid, parent_data['phone'], "outbound", parent_data)
+    call_logger.log_call_start(call_sid, customer_data['phone'], "outbound", customer_data)
     
     # Create OUTBOUND session
     session = session_manager.create_session(
         call_sid, 
         call_direction="outbound", 
-        lead_data=parent_data
+        lead_data=customer_data
     )
     
     # Build TwiML response
     response = VoiceResponse()
     
-    # Use plumbing intro for outbound calls (fallback)
+    # Use plumbing intro for outbound calls
     selected_intro = "plumbing_intro.mp3"
     session.session_memory["intro_played"] = True
     
@@ -99,8 +99,8 @@ def continue_outbound_conversation(call_sid):
         transcript = session.next_transcript
         
         # Add to conversation history
-        session.add_to_history("Parent", transcript)
-        session.add_to_history("Nisha", content)
+        session.add_to_history("Customer", transcript)
+        session.add_to_history("Jason", content)
         
         # Build TwiML response
         twiml_response = VoiceResponse()
@@ -169,13 +169,13 @@ def continue_outbound_conversation(call_sid):
         return str(response)
 
 def make_outbound_call(target_number, lead_data, base_url):
-    """Make an outbound call to a school/prospect"""
+    """Make an outbound call to a customer/prospect"""
     try:
         # Ensure phone number has + prefix
         if not target_number.startswith('+'):
             target_number = '+' + target_number
             
-        print(f"📞 Calling {lead_data.get('school_name')} at {target_number}")
+        print(f"📞 Calling {lead_data.get('customer_name')} at {target_number}")
         
         call = twilio_client.calls.create(
             to=target_number,
@@ -195,19 +195,19 @@ def make_outbound_call(target_number, lead_data, base_url):
         print(f"❌ Failed to make outbound call: {e}")
         return None
 
-def start_school_calling_campaign(target_list, max_calls=50, base_url=""):
-    """Start mass outbound calling campaign to schools"""
+def start_plumbing_calling_campaign(target_list, max_calls=50, base_url=""):
+    """Start mass outbound calling campaign to potential customers"""
     
     call_count = 0
     successful_calls = 0
     
-    for school in target_list:
+    for customer in target_list:
         if call_count >= max_calls:
             break
             
         # Check if already called today (in real implementation)
-        if not school.get('called_today', False):
-            call_sid = make_outbound_call(school['phone'], school, base_url)
+        if not customer.get('called_today', False):
+            call_sid = make_outbound_call(customer['phone'], customer, base_url)
             
             if call_sid:
                 successful_calls += 1
@@ -219,28 +219,32 @@ def start_school_calling_campaign(target_list, max_calls=50, base_url=""):
         if call_count >= max_calls:
             break
     
-    print(f"🚀 School campaign complete: {successful_calls}/{call_count} calls successful")
+    print(f"🚀 Plumbing campaign complete: {successful_calls}/{call_count} calls successful")
     return successful_calls
 
 @outbound_bp.route("/start_campaign", methods=['POST'])
 def start_campaign():
-    """API endpoint to start school calling campaign"""
+    """API endpoint to start plumbing calling campaign"""
     try:
-        # Sample school data (in real implementation, load from database/CSV)
-        sample_schools = [
+        # Sample customer data (in real implementation, load from database/CSV)
+        sample_customers = [
             {
                 'id': '1', 
-                'school_name': 'DPS School Delhi', 
-                'phone': '+91XXXXXXXXXX', 
-                'type': 'school'
+                'customer_name': 'John Smith', 
+                'phone': '+61412345678', 
+                'type': 'lead',
+                'address': '123 Main St, Melbourne',
+                'service_needed': 'drain_cleaning'
             },
             {
                 'id': '2', 
-                'school_name': 'Ryan International', 
-                'phone': '+91XXXXXXXXXX', 
-                'type': 'school'
+                'customer_name': 'Sarah Johnson', 
+                'phone': '+61487654321', 
+                'type': 'lead',
+                'address': '456 Oak Ave, Melbourne',
+                'service_needed': 'hot_water_repair'
             },
-            # Add more schools from your database...
+            # Add more customers from your database...
         ]
         
         # Get base URL for callbacks
@@ -248,15 +252,15 @@ def start_campaign():
         
         # Start campaign in background thread
         campaign_thread = threading.Thread(
-            target=start_school_calling_campaign, 
-            args=(sample_schools, 10, base_url)  # Start with 10 calls
+            target=start_plumbing_calling_campaign, 
+            args=(sample_customers, 10, base_url)  # Start with 10 calls
         )
         campaign_thread.daemon = True
         campaign_thread.start()
         
         return {
             "status": "success", 
-            "message": "School campaign started",
+            "message": "Plumbing campaign started",
             "max_calls": 10
         }
         
@@ -278,5 +282,85 @@ def get_campaign_status():
     return {
         "active_calls": active_count,
         "today_stats": stats,
-        "outbound_calls_tracked": len(session_manager.active_outbound_calls)
+        "message": f"Currently {active_count} active calls"
     }
+
+def load_customers_from_csv(csv_file_path):
+    """Load customer data from CSV file for outbound campaigns"""
+    import csv
+    
+    customers = []
+    try:
+        with open(csv_file_path, 'r', encoding='utf-8') as f:
+            reader = csv.DictReader(f)
+            for row in reader:
+                # Ensure required fields exist
+                if 'phone' in row and row['phone'].strip():
+                    customer = {
+                        'id': row.get('id', str(len(customers) + 1)),
+                        'customer_name': row.get('customer_name', 'Customer'),
+                        'phone': row['phone'].strip(),
+                        'type': row.get('type', 'lead'),
+                        'address': row.get('address', ''),
+                        'service_needed': row.get('service_needed', ''),
+                        'notes': row.get('notes', ''),
+                        'called_today': False
+                    }
+                    customers.append(customer)
+        
+        print(f"📋 Loaded {len(customers)} customers from CSV: {csv_file_path}")
+        return customers
+        
+    except Exception as e:
+        print(f"❌ Error loading CSV: {e}")
+        return []
+
+@outbound_bp.route("/start_csv_campaign", methods=['POST'])
+def start_csv_campaign():
+    """Start campaign using customer data from CSV file"""
+    try:
+        # CSV file path (you can make this configurable)
+        csv_file = "customer_data/leads.csv"
+        
+        if not os.path.exists(csv_file):
+            return {
+                "status": "error",
+                "message": f"CSV file not found: {csv_file}"
+            }
+        
+        # Load customers from CSV
+        customers = load_customers_from_csv(csv_file)
+        
+        if not customers:
+            return {
+                "status": "error",
+                "message": "No valid customers found in CSV"
+            }
+        
+        # Get base URL for callbacks
+        base_url = request.url_root.rstrip('/')
+        
+        # Get max calls from request (default 10)
+        max_calls = request.json.get('max_calls', 10) if request.json else 10
+        
+        # Start campaign in background thread
+        campaign_thread = threading.Thread(
+            target=start_plumbing_calling_campaign, 
+            args=(customers, max_calls, base_url)
+        )
+        campaign_thread.daemon = True
+        campaign_thread.start()
+        
+        return {
+            "status": "success", 
+            "message": f"CSV campaign started with {len(customers)} customers",
+            "total_customers": len(customers),
+            "max_calls": max_calls
+        }
+        
+    except Exception as e:
+        print(f"❌ CSV campaign start error: {e}")
+        return {
+            "status": "error", 
+            "message": str(e)
+        }
