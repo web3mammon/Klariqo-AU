@@ -69,7 +69,7 @@ def health_check():
     export_stats = session_exporter.get_export_stats()
     
     return f"""
-    <h1>🔧 Pete's Plumbing - AI Voice Assistant (Jason)</h1>
+            <h1>🔧 {Config.CLIENT_CONFIG['business_name']} - AI Voice Assistant ({Config.CLIENT_CONFIG['ai_assistant_name']})</h1>
     <p><strong>Status:</strong> ✅ Running</p>
     <p><strong>Active Sessions:</strong> {session_manager.get_active_count()}</p>
     <p><strong>Audio Files Cached:</strong> {len(audio_manager.memory_cache)}</p>
@@ -428,7 +428,7 @@ def customer_data_dashboard():
             
             # Generate HTML dashboard
             html = f"""
-            <h1>📊 Pete's Plumbing - Customer Data Dashboard</h1>
+            <h1>📊 {Config.CLIENT_CONFIG['business_name']} - Customer Data Dashboard</h1>
             <p><strong>Total Sessions:</strong> {export_stats['total_sessions']}</p>
             <p><strong>File Size:</strong> {export_stats.get('file_size_kb', 0)} KB</p>
             <p><a href="/download-customer-data">📥 Download CSV File</a></p>
@@ -476,7 +476,7 @@ def download_customer_data():
         csv_path = export_stats.get('csv_file', '')
         
         if os.path.exists(csv_path):
-            return send_file(csv_path, as_attachment=True, download_name="pete_plumbing_customer_data.csv")
+            return send_file(csv_path, as_attachment=True, download_name=f"{Config.CLIENT_CONFIG['business_name'].lower().replace(' ', '_')}_customer_data.csv")
         else:
             return "Customer data file not found", 404
             

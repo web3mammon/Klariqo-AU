@@ -144,7 +144,7 @@ class ResponseRouter:
         confirmation_words = ["yes", "sounds good", "perfect", "that works", "confirm", "book that"]
         if any(word in user_lower for word in confirmation_words):
             if customer_name:
-                return "TTS", f"Excellent {customer_name}! You're all booked. I'll give you a call 30 minutes before we arrive. Thanks for choosing Pete's Plumbing!"
+                return "TTS", f"Excellent {customer_name}! You're all booked. I'll give you a call 30 minutes before we arrive. Thanks for choosing {Config.CLIENT_CONFIG['business_name']}!"
             else:
                 return "TTS", "Perfect! Can I grab your name and phone number to confirm the booking?"
         
@@ -194,7 +194,7 @@ class ResponseRouter:
         current_date_str = current_date.strftime("%A, %B %d, %Y")
         current_time_str = current_date.strftime("%I:%M %p")
         
-        prompt = f"""You are Jason from Pete's Plumbing — a friendly, professional voice assistant helping customers with plumbing services in Australia.
+        prompt = f"""You are {Config.CLIENT_CONFIG['ai_assistant_name']} from {Config.CLIENT_CONFIG['business_name']} — a friendly, professional voice assistant helping customers with {Config.CLIENT_CONFIG['industry']} services in {Config.CLIENT_CONFIG['location']}.
         Your job is to respond to customer queries with the right audio file snippet(s) from our library OR generate appropriate booking responses.
 
 🚨 CRITICAL RULES:

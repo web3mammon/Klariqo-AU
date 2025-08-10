@@ -13,7 +13,38 @@ load_dotenv()
 class Config:
     """Centralized configuration class for Klariqo"""
     
-    # API Keys - loaded from environment variables
+    # ============================================================================
+    # 🏢 CLIENT CONFIGURATION - EASY ADAPTATION FOR DIFFERENT CLIENTS
+    # ============================================================================
+    # To adapt this system for a new client, update these variables:
+    CLIENT_CONFIG = {
+        "business_name": "Pete's Plumbing",           # Your client's business name
+        "ai_assistant_name": "Jason",                 # Name of the AI assistant
+        "industry": "plumbing",                       # Industry type (plumbing, hotel, real_estate, etc.)
+        "location": "Australia",                      # Country/region
+        "city": "Melbourne",                          # Primary city
+        "phone_number": "+61XXXXXXXXX",               # Client's phone number
+        "website": "https://petesplumbing.com.au",    # Client's website
+        "business_hours": "Mon-Fri 8AM-6PM, Sat 9AM-4PM",
+        "emergency_available": True,                  # 24/7 emergency service
+        "service_area": "Greater Melbourne",          # Service coverage area
+        "currency": "AUD",                            # Currency for pricing
+        "timezone": "Australia/Melbourne"             # Timezone for scheduling
+    }
+    
+    # ============================================================================
+    # 🎙️ VOICE & TTS CONFIGURATION
+    # ============================================================================
+    # ElevenLabs Voice Settings
+    VOICE_ID = "uA0L9FxeLpzlG615Ueay"  # Jason's voice - Pete's Plumbing representative
+    
+    # Deepgram Settings
+    DEEPGRAM_MODEL = "nova-2"
+    DEEPGRAM_LANGUAGE = "en"  # English for Australian plumbing business
+    
+    # ============================================================================
+    # 🔧 API KEYS - Loaded from environment variables
+    # ============================================================================
     DEEPGRAM_API_KEY = os.getenv('DEEPGRAM_API_KEY')
     GROQ_API_KEY = os.getenv('GROQ_API_KEY') 
     OPENAI_API_KEY = os.getenv('OPENAI_API_KEY')
@@ -22,13 +53,6 @@ class Config:
     TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
     TWILIO_PHONE = os.getenv('TWILIO_PHONE')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
-    
-    # ElevenLabs Voice Settings
-    VOICE_ID = "uA0L9FxeLpzlG615Ueay"  # Jason's voice - Pete's Plumbing representative
-    
-    # Deepgram Settings
-    DEEPGRAM_MODEL = "nova-2"
-    DEEPGRAM_LANGUAGE = "en"  # English for Australian plumbing business
     
     # Session Settings
     SILENCE_THRESHOLD = 0.4  # seconds before considering speech complete
