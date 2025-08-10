@@ -1,4 +1,4 @@
-# 🔄 CLIENT ADAPTATION GUIDE - AU/NZ Edition
+# 🚀 CLIENT ADAPTATION GUIDE - AU/NZ Edition
 ## Complete Guide for Freelancers & VAs to Deploy Klariqo Voice AI for AU/NZ Clients
 
 ---
@@ -13,15 +13,58 @@ This guide helps freelancers/VAs clone and adapt the Klariqo AI Voice Assistant 
 **🇳🇿 Perfect for New Zealand Businesses:**
 - 🏨 **Hotels in Auckland/Wellington** → 🏡 **Real Estate in Christchurch** → 🏫 **Education** → 🏢 **Professional Services** → 🔧 **Plumbing/Service Businesses**
 
-**Time Required:** 3-4 hours for complete adaptation  
+**Time Required:** 5 minutes (automated) or 3-4 hours (manual)  
 **Skills Needed:** Basic Git, Excel, Audio editing, Twilio account  
 **Result:** Production-ready AI voice system with Twilio integration for AU/NZ
 
 ---
 
-## 📋 **PHASE 1: Repository Setup (30 minutes)**
+## 🚀 **QUICK START: Automated Adaptation (5 minutes)**
 
-### **Step 1: Create New Repository for Client**
+### **Option 1: Automated Tool (Recommended)**
+```bash
+# Run the adaptation tool
+py client_adaptation.py
+
+# Choose from pre-built templates or create custom
+# Follow the prompts to configure your client
+```
+
+### **Option 2: Manual Configuration**
+```python
+# Edit config.py - Update CLIENT_CONFIG section:
+CLIENT_CONFIG = {
+    "business_name": "Your Business Name",
+    "ai_assistant_name": "Your AI Name", 
+    "industry": "your_industry",
+    "location": "Your Country",
+    "city": "Your City",
+    "phone_number": "Your Phone",
+    "website": "Your Website",
+    "business_hours": "Your Hours",
+    "emergency_available": True/False,
+    "service_area": "Your Service Area",
+    "currency": "Your Currency",
+    "timezone": "Your Timezone"
+}
+```
+
+### **✅ What Gets Updated Automatically**
+- `config.py` - Client configuration
+- `router.py` - AI prompts and responses  
+- `main.py` - Dashboard and web interface
+- `README.md` - Project documentation
+- `customer_data/your_business_name/` - Client-specific data
+- `logs/your_business_name/` - Client-specific logs
+- `your_business_name_adaptation_summary.md` - Adaptation report
+
+---
+
+## 📋 **DETAILED MANUAL PROCESS (3-4 hours)**
+
+### **PHASE 1: Repository Setup (30 minutes)**
+
+#### **Step 1: Create New Repository for Client**
 ```bash
 # 1. Clone the original as a NEW repository (don't fork!)
 git clone https://github.com/web3mammon/Klariqo-AU.git
@@ -40,7 +83,7 @@ git branch -M main
 git push -u origin main
 ```
 
-### **Step 2: Rename Project Files**
+#### **Step 2: Rename Project Files**
 ```bash
 # Update project name throughout codebase
 # Find & Replace in ALL files:
@@ -64,7 +107,7 @@ git push -u origin main
 
 ### **Step 1: Industry Analysis & Content Planning**
 
-**For AU/NZ Hotels (Melbourne Grand, Auckland City Hotel, etc.):**
+#### **For AU/NZ Hotels (Melbourne Grand, Auckland City Hotel, etc.):**
 ```bash
 # Common inquiries to cover:
 # - Room availability & seasonal rates
@@ -84,7 +127,7 @@ git push -u origin main
 # - purpose (business, leisure, event)
 ```
 
-**For AU/NZ Real Estate (Brisbane Property Group, Auckland Realty, etc.):**
+#### **For AU/NZ Real Estate (Brisbane Property Group, Auckland Realty, etc.):**
 ```bash
 # Common inquiries to cover:
 # - Property availability & listings
@@ -98,133 +141,134 @@ git push -u origin main
 
 # Session variables to track:
 # - property_type, location_preference, budget_range
+# - inspection_date, contact_method, urgency_level
+# - investment_type, financing_status
+```
 
-**For AU/NZ Plumbing/Service Businesses (Pete's Plumbing, etc.):**
+#### **For AU/NZ Plumbing/Service Businesses (Current Setup):**
 ```bash
 # Common inquiries to cover:
-# - Emergency services & urgent repairs
-# - Appointment booking & availability
-# - Service types (drains, taps, toilets, hot water)
-# - Pricing & quotes
-# - Service areas & coverage
-# - Warranty & guarantees
-# - Payment methods & invoicing
-# - Follow-up services
+# - Service types (drain cleaning, hot water, gas fitting)
+# - Emergency vs routine services
+# - Pricing and quotes
+# - Availability and booking
+# - Service areas and coverage
+# - Experience and reputation
+# - Warranty and guarantees
 
 # Session variables to track:
 # - service_type, urgency_level, property_type
-# - customer_location, customer_name, customer_phone
-# - preferred_date, preferred_time, selected_appointment
-# - issue_description, previous_customer
-```
-# - buyer_type (first_home, investor, upgrader)
-# - inspection_availability, contact_method
-# - financing_status, timeline
-# - specific_requirements (bedrooms, garage, etc.)
+# - customer_location, preferred_date, preferred_time
+# - customer_name, customer_phone, issue_description
 ```
 
-**For AU/NZ Medical Centers:**
+### **Step 2: Audio File Recording & Production**
+
+#### **Recording Requirements:**
 ```bash
-# Common inquiries to cover:
-# - Doctor availability & bulk billing
-# - Appointment bookings & cancellations
-# - Medicare & health fund billing
-# - Prescription renewals
-# - Test results & pathology
-# - Specialist referrals
-# - Practice locations & parking
-# - After-hours & emergency contacts
-
-# Session variables to track:
-# - patient_name, medicare_number
-# - doctor_preference, appointment_type
-# - health_fund, urgency_level
-# - preferred_time, contact_method
-```
-
-### **Step 2: Create New Audio Content**
-
-#### **Update Excel Management File**
-```bash
-# 1. Open audio_files.xlsx
-# 2. Replace ALL content with new industry-specific responses
-# 3. Structure by categories relevant to AU/NZ client:
-
-# Example for Melbourne Hotel:
-Category | Filename | Transcript | Alternate_Version
----------|----------|------------|------------------
-introductions | melbourne_hotel_intro.mp3 | "G'day! Welcome to [HOTEL NAME] Melbourne..." | hotel_intro_formal.mp3
-room_inquiries | room_availability_au.mp3 | "I can check our availability for you..." | room_check_alt.mp3
-amenities | amenities_melbourne.mp3 | "Our hotel features a rooftop pool, gym..." | amenities_detailed.mp3
-booking | booking_process_au.mp3 | "I can help you book directly..." | booking_simple.mp3
-local_info | melbourne_attractions.mp3 | "Melbourne's famous for its laneways..." | cbd_info.mp3
-```
-
-#### **Record New Audio Files**
-```bash
-# 1. Script writing for AU/NZ market:
-#    - Use Australian/NZ accent and terminology
-#    - Professional, friendly, helpful tone
-#    - Include local references (CBD, suburbs, etc.)
-#    - Use familiar terms (lift vs elevator, car park vs parking lot)
+# 1. Recording environment:
+#    - Quiet room with minimal echo
+#    - Professional microphone (USB condenser recommended)
+#    - Recording software (Audacity, GarageBand, etc.)
 
 # 2. Recording requirements:
-#    - Professional voice actor with AU/NZ accent
 #    - Clear recording quality (no background noise)
-#    - Format: MP3, high quality (44.1kHz recommended)
-#    - Length: 10-45 seconds per response
-#    - Natural speech pace, easy to understand
+#    - Consistent volume levels
+#    - Natural speaking pace (not too fast/slow)
+#    - Australian/NZ accent appropriate for target market
+#    - Professional but friendly tone
 
-# 3. File naming convention:
-#    - location_industry_topic.mp3 (e.g., melbourne_hotel_checkin.mp3)
-#    - Keep filenames descriptive but concise
-#    - No spaces, use underscores
-#    - Include city/region if relevant
+# 3. File format requirements:
+#    - Save as MP3 files
+#    - 44.1kHz sample rate
+#    - 128kbps bitrate minimum
+#    - Mono or stereo (system converts to mono)
 ```
 
-### **Step 3: Audio File Processing**
+#### **Audio File Organization:**
 ```bash
-# 1. Place new MP3 files in audio_optimised/ directory
-# 2. Update Excel file with all new content
-# 3. Convert Excel to JSON:
-py excel_to_json.py
-# Select option 1 to convert
+# Create these folders:
+mkdir audio_optimised         # Original MP3 files from recording
+mkdir audio_ulaw             # μ-law converted files (auto-generated)
 
-# 4. Convert MP3 to μ-law format for Twilio:
+# File naming convention:
+# - Use descriptive names: "room_availability.mp3"
+# - Avoid spaces: use underscores or hyphens
+# - Keep names short but clear
+# - Group related files: "hotel_intro.mp3", "hotel_amenities.mp3"
+```
+
+### **Step 3: Audio Content Creation**
+
+#### **Essential Audio Files to Create:**
+
+**For Hotels:**
+```bash
+# Core response files:
+hotel_intro.mp3              # "Welcome to [Hotel Name], how can I help you today?"
+room_availability.mp3        # "We have several room types available..."
+room_rates.mp3              # "Our rates start from $XXX per night..."
+check_in_times.mp3          # "Check-in is from 2 PM, check-out by 11 AM..."
+amenities.mp3               # "We offer free WiFi, pool, gym, restaurant..."
+location_directions.mp3     # "We're located in the CBD, 10 minutes from airport..."
+booking_process.mp3         # "I can help you book a room. What dates do you need?"
+local_attractions.mp3       # "Popular attractions include..."
+goodbye.mp3                 # "Thank you for calling [Hotel Name]..."
+```
+
+**For Real Estate:**
+```bash
+# Core response files:
+real_estate_intro.mp3       # "Welcome to [Agency Name], how can I help you?"
+property_availability.mp3   # "We have several properties available..."
+inspection_booking.mp3      # "I can help you book an inspection..."
+price_guide.mp3            # "Properties in this area typically range from..."
+suburb_info.mp3            # "This suburb is known for..."
+financing_info.mp3         # "We can help with mortgage pre-approval..."
+goodbye.mp3                # "Thank you for calling [Agency Name]..."
+```
+
+**For Plumbing (Current):**
+```bash
+# Core response files:
+plumbing_intro.mp3          # "G'day! You've reached Pete's Plumbing..."
+services_offered.mp3        # "We handle blocked drains, leaking taps..."
+pricing.mp3                # "Our pricing usually starts at $98..."
+available_hours.mp3        # "We're available Monday through Saturday..."
+in_business_how_long.mp3   # "We've been doing this for 7 years..."
+ask_time_day.mp3          # "We've got a few open slots this week..."
+goodbye.mp3               # "Thanks for choosing Pete's Plumbing..."
+```
+
+### **Step 4: Audio File Processing**
+
+#### **Convert to μ-law Format:**
+```bash
+# 1. Place MP3 files in audio_optimised/ folder
+# 2. Run the audio optimizer:
 py audio-optimiser.py
-# This creates audio_ulaw/ directory with Twilio-ready files
 
-# 5. Verify conversion:
-ls audio_ulaw/  # Should show all your new .ulaw files
-# Each .ulaw file is ~50% smaller than equivalent PCM
+# This will:
+# - Convert MP3 to μ-law format for telephony
+# - Optimize for 8kHz, 8-bit μ-law encoding
+# - Create files in audio_ulaw/ folder
+# - Load files into memory cache for fast access
 ```
 
-### **⚠️ CRITICAL STEP: Update Route Files (OFTEN MISSED!)**
+#### **Update Audio Transcripts:**
 ```bash
-# 🚨 IMPORTANT: After changing audio files, you MUST update the intro files in routes
-
-# 6. Update inbound call intro:
-# File: routes/inbound.py
-# Find line: selected_intro = "old_intro_file.mp3"
-# Change to: selected_intro = "your_new_intro_file.mp3"
-
-# Example for Pete's Plumbing:
-# OLD: selected_intro = "school_intro.mp3"
-# NEW: selected_intro = "plumbing_intro.mp3"
-
-# Example for Melbourne Hotel:
-# OLD: selected_intro = "school_intro.mp3"  
-# NEW: selected_intro = "melbourne_hotel_intro.mp3"
-
-# 7. Update outbound call intro (if using outbound calls):
-# File: routes/outbound.py
-# Find line: selected_intro = "old_outbound_intro.mp3"
-# Change to: selected_intro = "your_new_intro_file.mp3"
-
-# 🔧 Why this matters:
-# - The route files tell the system which audio file to play first
-# - If you don't update these, you'll get "audio not in cache" errors
-# - This is the most commonly missed step when adapting for new clients
+# Edit audio_snippets.json to match your new audio files:
+{
+  "introductions": {
+    "your_intro.mp3": "Your actual transcript here..."
+  },
+  "pricing": {
+    "your_pricing.mp3": "Your actual transcript here..."
+  },
+  "miscellaneous": {
+    "your_service.mp3": "Your actual transcript here..."
+  }
+}
 ```
 
 ---
@@ -232,10 +276,10 @@ ls audio_ulaw/  # Should show all your new .ulaw files
 ## ⚙️ **PHASE 3: Configuration Updates (30 minutes)**
 
 ### **Step 1: Update Session Management**
+
+#### **For AU/NZ Hotel:**
 ```python
 # In config.py, update SESSION_FLAGS_TEMPLATE:
-
-# For AU/NZ Hotel:
 SESSION_FLAGS_TEMPLATE = {
     "intro_played": False,
     "room_inquiry_made": False,
@@ -261,362 +305,308 @@ SESSION_VARIABLES_TEMPLATE = {
 }
 ```
 
-### **Step 2: Update AI Response Logic**
+#### **For AU/NZ Real Estate:**
 ```python
-# In router.py, update the base prompt:
-
-# Replace generic prompts with AU/NZ industry-specific ones
-# Update file selection rules for local context
-# Modify conversation flow for Australian/NZ customer expectations
-
-# Example for Melbourne hotel:
-prompt = f"""You are [AI_NAME], a helpful voice assistant at [HOTEL_NAME] in Melbourne. 
-Your job is to respond to guest inquiries with appropriate audio responses.
-
-🏨 MELBOURNE HOTEL RESPONSE RULES:
-Guest asks about rooms → melbourne_room_availability.mp3
-Guest mentions dates → Check season: summer_rates.mp3 or winter_rates.mp3
-Guest asks amenities → melbourne_amenities.mp3
-Guest asks location → melbourne_location_cbd.mp3
-Guest wants to book → booking_process_au.mp3
-Guest asks attractions → melbourne_attractions.mp3
-..."""
-```
-
-### **Step 3: Update Voice & TTS Settings**
-```python
-# In config.py, update voice settings for AU/NZ:
-VOICE_ID = "AU_VOICE_ID"   # ElevenLabs Australian/NZ accent voice
-DEEPGRAM_LANGUAGE = "en-AU"  # Australian English (or en-NZ for New Zealand)
-
-# In tts_engine.py, adjust voice settings for local market:
-voice_settings = VoiceSettings(
-    stability=0.7,           # Higher stability for professional tone
-    similarity_boost=0.8,    # Good accent consistency
-    style=0.2,              # Slight Australian/NZ warmth
-    use_speaker_boost=True   # Essential for clear phone audio
-)
-```
-
----
-
-## 📊 **PHASE 3.5: Customer Data Export Configuration (15 minutes)**
-
-### **Step 1: Configure Customer Data Collection**
-The system automatically exports customer data to CSV files. Configure for your client's business:
-
-**📋 Update Session Variables in `config.py`:**
-```python
-# For Plumbing Business (example):
-SESSION_VARIABLES_TEMPLATE = {
-    "customer_name": None,
-    "customer_phone": None,
-    "customer_location": None,
-    "service_type": None,  # "blocked_drain", "leaking_tap", "toilet_repair"
-    "urgency_level": None,  # "emergency", "urgent", "routine"
-    "property_type": None,  # "residential", "commercial", "unit"
-    "preferred_date": None,  # "today", "tomorrow", "this_week"
-    "preferred_time": None,  # "morning", "afternoon", "evening"
-    "selected_appointment": None,  # Final booked slot
-    "issue_description": None,
-    "previous_customer": None  # "yes", "no"
+SESSION_FLAGS_TEMPLATE = {
+    "intro_played": False,
+    "property_inquiry_made": False,
+    "inspection_discussed": False,
+    "pricing_mentioned": False,
+    "financing_discussed": False,
+    "location_discussed": False,
+    "market_info_shared": False,
+    "contact_collected": False
 }
 
-# For Hotel Business (example):
 SESSION_VARIABLES_TEMPLATE = {
-    "guest_name": None,
-    "guest_phone": None,
-    "check_in_date": None,
-    "check_out_date": None,
-    "room_type": None,  # "standard", "deluxe", "suite"
-    "guest_count": None,
-    "special_requests": None,
+    "property_type": None,
+    "location_preference": None,
     "budget_range": None,
-    "booking_status": None
+    "inspection_date": None,
+    "customer_name": None,
+    "contact_method": None,
+    "urgency_level": None,
+    "investment_type": None,
+    "financing_status": None
 }
 ```
 
-### **Step 2: Configure Business Availability Data**
-Add hardcoded availability data for testing dynamic booking:
-
+#### **For AU/NZ Plumbing (Current):**
 ```python
-# In config.py - Add your client's availability:
-HOTEL_AVAILABILITY = {
-    "available_rooms": [
-        {"date": "2024-08-05", "room_type": "standard", "price": "$150"},
-        {"date": "2024-08-06", "room_type": "deluxe", "price": "$200"},
-        # Add more availability data
-    ]
+SESSION_FLAGS_TEMPLATE = {
+    "intro_played": False,
+    "services_explained": False, 
+    "pricing_discussed": False,
+    "availability_mentioned": False,
+    "location_confirmed": False,
+    "urgency_assessed": False,
+    "contact_details_collected": False,
+    "booking_confirmed": False,
+    "experience_mentioned": False
 }
 
-PLUMBING_AVAILABILITY = {
+SESSION_VARIABLES_TEMPLATE = {
+    "service_type": None,  # "blocked_drain", "leaking_tap", "toilet_repair", "hot_water", "emergency", "gas_fitting"
+    "urgency_level": None,  # "emergency", "urgent", "routine", "flexible"
+    "property_type": None,  # "residential", "commercial", "unit", "house"
+    "customer_location": None,  # Suburb/area for scheduling
+    "customer_name": None,  # Customer's name
+    "customer_phone": None,  # Phone number for booking
+    "preferred_date": None,  # "today", "tomorrow", "this_week", specific date
+    "preferred_time": None,  # "morning", "afternoon", "evening", specific time
+    "issue_description": None,  # Brief description of the plumbing issue
+    "previous_customer": None,  # "yes", "no" - for repeat customer handling
+    "selected_appointment": None  # Final booked appointment slot
+}
+```
+
+### **Step 2: Update AI Response Logic**
+
+#### **Update Base Prompt in router.py:**
+```python
+# Replace the base prompt with industry-specific content
+prompt = f"""You are {Config.CLIENT_CONFIG['ai_assistant_name']}, a helpful voice assistant at {Config.CLIENT_CONFIG['business_name']} in {Config.CLIENT_CONFIG['city']}. 
+Your job is to respond to customer inquiries with appropriate audio responses.
+
+🏨 {Config.CLIENT_CONFIG['industry'].upper()} RESPONSE RULES:
+# Add industry-specific rules here
+
+📋 AVAILABLE AUDIO FILES:
+{available_files}
+
+Remember: Always be helpful, professional, and ready to assist customers!"""
+```
+
+### **Step 3: Update Availability Data**
+
+#### **Custom Availability Slots:**
+```python
+# Update availability slots in config.py for your business schedule:
+YOUR_BUSINESS_AVAILABILITY = {
     "available_slots": [
-        {"date": "Monday, August 5th", "time": "8:00 AM - 10:00 AM", "slot_id": "MON05_0800"},
-        {"date": "Tuesday, August 6th", "time": "3:30 PM - 5:30 PM", "slot_id": "TUE06_1530"},
-        # Add more availability data
+        {"date": "Monday, August 5th", "time": "9:00 AM - 11:00 AM", "slot_id": "MON05_0900"},
+        {"date": "Tuesday, August 6th", "time": "2:00 PM - 4:00 PM", "slot_id": "TUE06_1400"},
+        # Add your business-specific availability
     ]
 }
 ```
 
-### **Step 3: Test Customer Data Export**
-```bash
-# 1. Start the system
-python main.py
+---
 
-# 2. Make test calls and collect customer data
-# 3. Check customer data export:
-# - Visit: http://localhost:5000/customer-data
-# - Download: http://localhost:5000/download-customer-data
+## 🏢 **EXAMPLE CLIENT CONFIGURATIONS**
 
-# 4. Verify CSV file created: customer_data/customer_sessions.csv
+### **Hotel Business**
+```python
+CLIENT_CONFIG = {
+    "business_name": "Melbourne Grand Hotel",
+    "ai_assistant_name": "Emma",
+    "industry": "hotel",
+    "location": "Australia",
+    "city": "Melbourne",
+    "phone_number": "+61XXXXXXXXX",
+    "website": "https://melbournegrand.com.au",
+    "business_hours": "24/7",
+    "emergency_available": True,
+    "service_area": "Melbourne CBD",
+    "currency": "AUD",
+    "timezone": "Australia/Melbourne"
+}
 ```
 
-**📊 Customer Data Features:**
-- **Automatic Export**: Every call session saved to CSV
-- **Business Dashboard**: View recent customers and statistics
-- **Follow-up Tracking**: Identifies customers needing callbacks
-- **CRM Integration**: CSV files import into any CRM system
-- **Analytics**: Track booking conversion rates and service preferences
+### **Real Estate Business**
+```python
+CLIENT_CONFIG = {
+    "business_name": "Brisbane Property Group",
+    "ai_assistant_name": "Sarah",
+    "industry": "real_estate",
+    "location": "Australia",
+    "city": "Brisbane",
+    "phone_number": "+61XXXXXXXXX",
+    "website": "https://brisbaneproperty.com.au",
+    "business_hours": "Mon-Fri 9AM-5PM, Sat 9AM-3PM",
+    "emergency_available": False,
+    "service_area": "Greater Brisbane",
+    "currency": "AUD",
+    "timezone": "Australia/Brisbane"
+}
+```
+
+### **Plumbing Business (Current)**
+```python
+CLIENT_CONFIG = {
+    "business_name": "Pete's Plumbing",
+    "ai_assistant_name": "Jason",
+    "industry": "plumbing",
+    "location": "Australia",
+    "city": "Melbourne",
+    "phone_number": "+61XXXXXXXXX",
+    "website": "https://petesplumbing.com.au",
+    "business_hours": "Mon-Fri 8AM-6PM, Sat 9AM-4PM",
+    "emergency_available": True,
+    "service_area": "Greater Melbourne",
+    "currency": "AUD",
+    "timezone": "Australia/Melbourne"
+}
+```
 
 ---
 
-## 🧪 **PHASE 4: Testing & Validation (45 minutes)**
+## 🔧 **PHASE 4: Route File Updates (15 minutes)**
 
-### **Step 1: Audio Testing**
+### **Update Route Files:**
+
+#### **File: routes/inbound.py**
+```python
+# Find line: selected_intro = "plumbing_intro.mp3"
+# Change to: selected_intro = "your_new_intro_file.mp3"
+
+# 🔧 Why this matters:
+# - The route files tell the system which audio file to play first
+# - If you don't update these, you'll get "audio not in cache" errors
+# - This is the most commonly missed step when adapting for new clients
+```
+
+#### **File: routes/outbound.py**
+```python
+# Find line: selected_intro = "plumbing_intro.mp3"
+# Change to: selected_intro = "your_new_intro_file.mp3"
+
+# Same importance as inbound.py - must match your audio files
+```
+
+---
+
+## 🧪 **PHASE 5: Testing & Validation (30 minutes)**
+
+### **Step 1: System Testing**
 ```bash
-# 1. Test audio file loading:
+# 1. Start the system:
 py main.py
-# Should see: "🎵 μ-law cache: [N] files loaded (X.XMB)"
 
-# 2. Test individual audio files:
-# Use /test endpoint to play specific files
-# Verify all audio is clear with AU/NZ accent
-# Check for proper pronunciation of local terms
+# 2. Check system health:
+# Visit: http://localhost:5000/debug/system_health
 
-# 3. Test audio chains:
-# Ensure multiple files can play together smoothly
-# Test transitions between different file types
+# 3. Verify audio files:
+# Visit: http://localhost:5000/debug/audio_files
+
+# 4. Test TTS generation:
+# Visit: http://localhost:5000/test
 ```
 
-### **Step 2: Conversation Flow Testing**
+### **Step 2: Call Testing**
 ```bash
-# Create test scenarios for AU/NZ industry:
+# 1. Set up Twilio webhook:
+# - Point to your server: https://your-domain.com/twilio/voice
+# - Enable Media Streams for bidirectional audio
 
-# Melbourne Hotel Test Scenarios:
-# 1. "I'm looking for a room in Melbourne CBD for next weekend"
-# 2. "What facilities do you have?"  
-# 3. "What are your rates for a standard room?"
-# 4. "I need to change my booking"
-# 5. "How do I get to your hotel from the airport?"
-# 6. "What's nearby for entertainment?"
+# 2. Test inbound calls:
+# - Call your Twilio number
+# - Verify intro plays correctly
+# - Test conversation flow
 
-# Expected AI responses:
-# - Should use Australian terminology and accent
-# - Should mention Melbourne-specific amenities/locations
-# - Should provide local context (CBD, transport, etc.)
-# - Should guide through booking process clearly
+# 3. Test outbound calls:
+# - Use test endpoint: /call_test/your_number
+# - Verify customer name personalization works
+# - Test CSV campaign functionality
 ```
 
-### **Step 3: Twilio Integration Testing**
+### **Step 3: Content Validation**
 ```bash
-# Test Twilio Media Streams functionality:
-# 1. Verify WebSocket connection establishes
-# 2. Test μ-law audio streaming works correctly
-# 3. Check session variables are tracked correctly:
-#    - Mention dates → system should remember
-#    - Ask about location → should use remembered city
-# 4. Verify no repetitive responses
-# 5. Check conversation history logging
-# 6. Test both inbound and outbound call flows
+# 1. Verify all audio files play correctly
+# 2. Check transcripts match audio content
+# 3. Test booking functionality
+# 4. Verify customer data collection
+# 5. Check call logging and exports
 ```
 
 ---
 
-## 🚀 **PHASE 5: Client Delivery (30 minutes)**
+## 🎯 **BENEFITS OF THIS APPROACH**
 
-### **Step 1: Documentation Update**
-```bash
-# 1. Update README.md:
-#    - Change title to client business
-#    - Update AU/NZ specific examples
-#    - Modify deployment instructions for Twilio AU/NZ
-#    - Include local phone number formats (+61/+64)
+### ✅ **Easy Replication**
+- Clone repository → Run adaptation tool → Ready for new client
+- No manual file editing required
+- Consistent configuration across all files
 
-# 2. Create CLIENT_SETUP_AU.md:
-#    - Client-specific Twilio configuration
-#    - AU/NZ phone number setup
-#    - Business-specific webhook URLs
-#    - Go-live checklist for Australian/NZ deployment
-```
+### ✅ **Maintainable**
+- Single source of truth for client information
+- Easy to update business details
+- Version control friendly
 
-### **Step 2: Environment Configuration**
-```bash
-# 1. Create client-specific .env.example:
-# Copy your .env but replace actual keys with placeholders
-cp .env .env.example
-# Edit .env.example to remove real API keys
+### ✅ **Scalable**
+- Support multiple clients from same codebase
+- Industry-specific templates
+- Automated setup process
 
-# 2. Document API accounts needed for AU/NZ:
-#    - Deepgram (same for all, supports en-AU/en-NZ)
-#    - OpenAI/Gemini (same for all)  
-#    - ElevenLabs (with Australian/NZ voice)
-#    - Twilio (client's account with AU/NZ phone number)
-```
-
-### **Step 3: Deployment Package**
-```bash
-# Create deployment package for AU/NZ client:
-# 1. Clean repository (remove logs, temp files)
-# 2. Test fresh clone and setup
-# 3. Create AU/NZ specific deployment checklist
-# 4. Record demonstration video with local scenarios
-
-# Final deliverables:
-# ✅ GitHub repository with new client code
-# ✅ All audio files (MP3 + μ-law)
-# ✅ Updated configuration for Twilio AU/NZ
-# ✅ Testing documentation with local test cases
-# ✅ Deployment guide for AU/NZ
-# ✅ Demo video showing Melbourne/Auckland scenarios
-```
+### ✅ **Production Ready**
+- Twilio μ-law streaming for AU/NZ telephony
+- Real-time conversation memory
+- Comprehensive logging and analytics
+- Customer name personalization
+- CSV-based outbound campaigns
 
 ---
 
-## 📊 **AU/NZ Industry-Specific Quick Guides**
+## 🚨 **IMPORTANT NOTES**
 
-### **🏨 AU/NZ Hotel Adaptation Checklist**
-- [ ] Room types & availability (twin, queen, king)
-- [ ] Amenities & services (pool, gym, wifi, car park)
-- [ ] Booking & reservation process (direct booking, OTAs)
-- [ ] Rate information by season (peak/off-peak)
-- [ ] Location & directions (CBD, airport transfers)
-- [ ] Special services (concierge, room service, laundry)
-- [ ] Local attractions & tours (city-specific)
-- [ ] Business facilities (meeting rooms, conference)
-
-### **🏡 AU/NZ Real Estate Adaptation Checklist**  
-- [ ] Property listings & availability
-- [ ] Inspection bookings & open homes
-- [ ] Price guides & market reports
-- [ ] Suburb information & school zones
-- [ ] Financing & mortgage assistance
-- [ ] Property management services
-- [ ] Investment property advice
-- [ ] Settlement & conveyancing
-
-### **🏥 AU/NZ Medical Adaptation Checklist**
-- [ ] Doctor availability & bulk billing
-- [ ] Appointment booking & Medicare
-- [ ] Health fund & insurance billing
-- [ ] Prescription renewals & repeats
-- [ ] Pathology & test results
-- [ ] Specialist referrals
-- [ ] Practice locations & accessibility
-- [ ] After-hours & emergency contacts
+1. **Backup First**: Always backup your current configuration before adapting
+2. **Test Thoroughly**: Test all functionality after adaptation
+3. **Update Audio Files**: Don't forget to replace audio content
+4. **Check Routes**: Verify intro files are correctly referenced
+5. **Environment Variables**: Ensure API keys are set for new client
+6. **Twilio Configuration**: Update webhook URLs for new domain
+7. **Audio Quality**: Ensure all audio files meet telephony standards
+8. **Content Accuracy**: Verify all transcripts match actual audio
 
 ---
 
-## ⚠️ **Common Pitfalls & Solutions**
+## 📞 **SUPPORT & TROUBLESHOOTING**
 
-### **Audio File Issues**
-```bash
-# 🚨 Problem: "❌ Intro audio not in cache: [filename].mp3" (MOST COMMON!)
-# Solution: Update route files! This is the #1 missed step
-#   - Edit routes/inbound.py: Change selected_intro = "your_new_intro.mp3"
-#   - Edit routes/outbound.py: Change selected_intro = "your_new_intro.mp3"
-#   - Make sure the filename matches what's in your audio_snippets.json
+### **Common Issues:**
+1. **Audio not in cache**: Check file names in routes match audio_ulaw/ folder
+2. **TTS not working**: Verify ElevenLabs API key in .env file
+3. **Calls not connecting**: Check Twilio webhook URLs and Media Streams
+4. **Customer name not working**: Verify CSV format and session variable updates
 
-# Problem: μ-law conversion fails
-# Solution: Check MP3 file quality, ensure librosa and audioop are installed
-
-# Problem: Audio sounds robotic or accent is wrong
-# Solution: Use professional Australian/NZ voice actor, natural speech patterns
-
-# Problem: Twilio audio not playing
-# Solution: Verify WebSocket message format uses 'streamSid' (camelCase)
-
-# Problem: Files too large for git
-# Solution: Use deployment options in main README, keep audio separate
-
-# Problem: Cache shows files loaded but none play
-# Solution: Check audio_snippets.json format, ensure MP3 filenames match .ulaw files
-```
-
-### **Configuration Issues**
-```bash
-# Problem: AI gives wrong responses for AU/NZ context
-# Solution: Update prompts with local examples, terminology, and city references
-
-# Problem: Session variables not tracking
-# Solution: Verify variable names match in config.py and router.py
-
-# Problem: TTS fallback not working with AU/NZ voice
-# Solution: Check ElevenLabs API key and voice ID for Australian/NZ accent
-```
-
-### **Deployment Issues**
-```bash
-# Problem: Audio files missing on production
-# Solution: Use audio deployment options from main README
-
-# Problem: Environment variables not loading
-# Solution: Verify .env file is copied to production server
-
-# Problem: Twilio integration fails
-# Solution: Check webhook URLs match client's domain and Twilio account region
-```
+### **Getting Help:**
+1. Check the generated adaptation summary file
+2. Review logs in `logs/` directory
+3. Test with simple configuration first
+4. Verify all file paths and references are correct
 
 ---
 
-## 💰 **Pricing Guide for AU/NZ Clients**
+## 🎉 **DEPLOYMENT CHECKLIST**
 
-### **Development Cost Breakdown (AUD)**
-- **Repository Setup & Customization:** $400-600
-- **Audio Content Creation (AU/NZ accent):** $1,200-2,000 (depends on # of responses)
-- **Configuration & Testing:** $600-800
-- **Deployment & Training:** $400-600
-- **Total Project:** $2,600-4,000 AUD
+### **Pre-Deployment:**
+- [ ] All audio files recorded and converted
+- [ ] Audio transcripts updated in audio_snippets.json
+- [ ] Route files updated with correct intro files
+- [ ] Client configuration updated in config.py
+- [ ] Session variables customized for industry
+- [ ] Availability data updated for business schedule
+- [ ] Twilio webhook URLs configured
+- [ ] Environment variables set (.env file)
 
-### **Ongoing Costs (Monthly - AUD)**
-- **Server Hosting (AWS AU/NZ):** $80-150
-- **Twilio AU/NZ:** $150-400 (based on call volume)
-- **API Costs:** $80-200 (Deepgram, OpenAI, ElevenLabs)
-- **Maintenance & Support:** $300-500
-- **Total Monthly:** $610-1,250 AUD
-
----
-
-## 📞 **Support & Next Steps**
-
-### **For Freelancers/VAs working with AU/NZ clients:**
-1. **Follow this guide step-by-step**
-2. **Test thoroughly with local scenarios before delivery**
-3. **Keep original repository as template for future AU/NZ clients**
-4. **Document any client-specific customizations**
-5. **Understand local business practices and terminology**
-
-### **For AU/NZ Clients:**
-1. **Review adapted system thoroughly with local test scenarios**
-2. **Test with real business scenarios (Melbourne hotel, Auckland real estate, etc.)**
-3. **Provide feedback on local accuracy and pronunciation**
-4. **Schedule training for staff on system monitoring**
-5. **Plan go-live strategy with backup support**
-
-### **Quality Assurance Checklist for AU/NZ:**
-- [ ] All audio files play correctly with proper AU/NZ accent
-- [ ] Session memory works as expected with local context
-- [ ] Industry-specific responses are accurate for AU/NZ market
-- [ ] Local terminology and references are correct
-- [ ] Twilio integration works with AU/NZ phone numbers
-- [ ] Configuration matches client business and local practices
-- [ ] Deployment documentation includes AU/NZ specific instructions
+### **Post-Deployment:**
+- [ ] System health check passed
+- [ ] Audio files loading correctly
+- [ ] TTS generation working
+- [ ] Inbound calls functioning
+- [ ] Outbound calls working
+- [ ] Customer name personalization active
+- [ ] CSV campaigns operational
+- [ ] Call logging and exports working
+- [ ] Client testing completed
 
 ---
 
-**🎉 Congratulations!** You've successfully adapted the Klariqo AI Voice Assistant for an AU/NZ client. The system is now ready for production deployment with Twilio integration.
+**🎉 You're now ready to deploy a production-ready AI voice system for your AU/NZ client!**
 
-**Next Steps:**
-1. **Follow the deployment guide in the main README.md**
-2. **Configure Twilio with AU (+61) or NZ (+64) phone number**
-3. **Test with client's target audience**
-4. **Go live with confidence!**
+The system includes:
+- ✅ **Twilio μ-law streaming** for AU/NZ telephony
+- ✅ **Customer name personalization** from CSV campaigns
+- ✅ **Real-time conversation memory** and context
+- ✅ **Comprehensive logging** and analytics
+- ✅ **Industry-specific templates** and configurations
+- ✅ **Automated adaptation tools** for quick setup
