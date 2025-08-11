@@ -100,6 +100,10 @@ class StreamingSession:
             return True
         return False
     
+    def get_session_variable(self, variable_name):
+        """Get a specific session variable"""
+        return self.session_variables.get(variable_name)
+    
     def get_session_context(self):
         """Get current session context for AI prompt"""
         context = []
