@@ -27,11 +27,13 @@ class ResponseRouter:
             "blocked drain": "blocked_drain", "drain blocked": "blocked_drain", "clogged drain": "blocked_drain",
             "leaking tap": "leaking_tap", "tap leak": "leaking_tap", "dripping tap": "leaking_tap", "faucet leak": "leaking_tap",
             "toilet": "toilet_repair", "loo": "toilet_repair", "dunny": "toilet_repair",
-            "hot water": "hot_water", "water heater": "hot_water", "no hot water": "hot_water", "cold water": "hot_water",
+            "hot water": "hot_water_issues", "water heater": "hot_water_issues", "no hot water": "hot_water_issues", "cold water": "hot_water_issues",
             "emergency": "emergency", "urgent": "emergency", "flooding": "emergency", "burst pipe": "emergency",
             "gas": "gas_fitting", "gas fitting": "gas_fitting", "gas leak": "emergency",
-            "shower": "shower_repair", "bath": "bathroom_repair", "bathroom": "bathroom_repair",
-            "kitchen": "kitchen_plumbing", "sink": "kitchen_plumbing", "dishwasher": "kitchen_plumbing"
+            "shower": "bath_kitchen_plumbing", "bath": "bath_kitchen_plumbing", "bathroom": "bath_kitchen_plumbing",
+            "kitchen": "bath_kitchen_plumbing", "sink": "bath_kitchen_plumbing", "dishwasher": "bath_kitchen_plumbing",
+            "pipe relining": "pipe_relining", "relining": "pipe_relining", "pipe lining": "pipe_relining",
+            "general problem": "general_problems", "plumbing issue": "general_problems", "problem": "general_problems"
         }
         
         for keyword, service_type in service_mappings.items():
@@ -40,11 +42,11 @@ class ResponseRouter:
                 break
         
         # Extract urgency level
-        if any(word in user_lower for word in ["emergency", "urgent", "asap", "flooding", "burst", "now"]):
+        if any(word in user_lower for word in ["emergency", "urgent", "asap", "flooding", "burst", "now", "immediately", "straight away"]):
             session.update_session_variable("urgency_level", "emergency")
-        elif any(word in user_lower for word in ["soon", "today", "this week"]):
+        elif any(word in user_lower for word in ["soon", "today", "this week", "quickly", "fast"]):
             session.update_session_variable("urgency_level", "urgent")
-        elif any(word in user_lower for word in ["whenever", "flexible", "no rush"]):
+        elif any(word in user_lower for word in ["whenever", "flexible", "no rush", "no hurry", "take your time"]):
             session.update_session_variable("urgency_level", "flexible")
         else:
             session.update_session_variable("urgency_level", "routine")
@@ -244,15 +246,35 @@ selected_appointment	Booked slot	Final confirmed appointment time
 📋 INTELLIGENT AUDIO SELECTION RULES:
 Customer Input	Response Strategy
 
-General inquiry/greeting	plumbing_intro.mp3
+General inquiry/greeting	plumbing_intro.mp3 OR intro_greeting.mp3
 
 Asks about services	services_offered.mp3
 
-Asks about pricing	pricing.mp3
+Asks about pricing	pricing.mp3 OR cost_estimate_enquiry.mp3
 
 Asks about experience/reputation	in_business_how_long.mp3
 
 Asks about availability (general)	available_hours.mp3
+
+Asks about timing/scheduling	ask_time_day.mp3 OR when_can_come.mp3
+
+Specific service inquiries:
+- Blocked drain	blocked_drain.mp3
+- Leaking tap	leaking_tap.mp3
+- Toilet repair	toilet_repair.mp3
+- Hot water issues	hot_water_issues.mp3
+- Gas fitting	gas_fitting.mp3
+- Pipe relining	pipe_relining.mp3
+- Bath/kitchen plumbing	bath_kitchen_plumbing.mp3
+- General problems	general_problems.mp3
+
+After hours calls	after_hours_greeting.mp3
+
+Urgent/emergency situations	urgent_callout.mp3
+
+Booking confirmation	confirmed_bye.mp3
+
+Need to check availability	need_to_check.mp3
 
 APPOINTMENT BOOKING (Use GENERATE:):
 Customer asks to book appointment	
@@ -288,11 +310,14 @@ Friday Aug 16: 1PM-3PM, 3:30PM-5:30PM
 {available_files}
 
 🔧 PLUMBING SERVICE EXAMPLES:
-"blocked drain" → "I can sort that blocked drain for you. We've got all the right equipment."
-"leaking tap" → "Leaking taps are one of our specialties. Usually a quick fix."
-"toilet repair" → "Toilet troubles? No worries, we'll have that sorted in no time."
-"hot water" → "Hot water issues can be tricky. I'll send our hot water specialist."
-"emergency" → "That sounds like an emergency. I can have someone there urgently."
+"blocked drain" → blocked_drain.mp3
+"leaking tap" → leaking_tap.mp3
+"toilet repair" → toilet_repair.mp3
+"hot water" → hot_water_issues.mp3
+"gas fitting" → gas_fitting.mp3
+"pipe relining" → pipe_relining.mp3
+"bathroom/kitchen" → bath_kitchen_plumbing.mp3
+"emergency" → urgent_callout.mp3
 
 Remember: Always be helpful, professional, and ready to book appointments with available time slots!"""
         
@@ -382,6 +407,17 @@ Recent conversation: {recent_conversation}
 - If customer_name and customer_phone are collected, proceed with booking confirmation
 - If customer confirms a time slot, finalize the booking
 - If customer_name is available, use it for personalization (e.g., "Thanks {customer_name}")
+
+🎙️ AUDIO FILE SELECTION GUIDANCE:
+- For general greetings: plumbing_intro.mp3 OR intro_greeting.mp3
+- For service inquiries: services_offered.mp3
+- For pricing questions: pricing.mp3 OR cost_estimate_enquiry.mp3
+- For timing/scheduling: ask_time_day.mp3 OR when_can_come.mp3
+- For specific services: Use the corresponding service file (blocked_drain.mp3, leaking_tap.mp3, etc.)
+- For urgent situations: urgent_callout.mp3
+- For after hours: after_hours_greeting.mp3
+- For booking confirmations: confirmed_bye.mp3
+- For availability checks: need_to_check.mp3
 
 Apply the rules from your system prompt. Choose appropriate files or GENERATE response for dynamic booking."""
         
