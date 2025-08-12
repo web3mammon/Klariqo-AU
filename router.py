@@ -184,6 +184,50 @@ class ResponseRouter:
         else:
             return "TTS", "Let me check my schedule. I have several openings this week. Would morning or afternoon work better for you?"
     
+    def _handle_agent_transfer(self, user_input, session):
+        """Handle agent transfer requests"""
+        from config import Config
+        
+        # Check if agent transfer is enabled
+        if not Config.AGENT_TRANSFER["enabled"]:
+            return None, None
+        
+        user_lower = user_input.lower()
+        
+        # Check for transfer keywords
+        transfer_keywords = Config.AGENT_TRANSFER["transfer_keywords"]
+        auto_transfer_conditions = Config.AGENT_TRANSFER["auto_transfer_conditions"]
+        
+        # Check if user wants to speak to agent
+        wants_agent = any(keyword in user_lower for keyword in transfer_keywords)
+        
+        # Check for automatic transfer conditions
+        auto_transfer = any(condition in user_lower for condition in auto_transfer_conditions)
+        
+        if wants_agent or auto_transfer:
+            # Mark session for transfer
+            session.update_session_variable("transfer_requested", "yes")
+            session.update_session_variable("transfer_reason", "customer_request" if wants_agent else "auto_transfer")
+            
+            # Get customer context for transfer
+            customer_name = session.get_session_variable("customer_name")
+            service_type = session.get_session_variable("service_type")
+            urgency_level = session.get_session_variable("urgency_level")
+            
+            # Log transfer request
+            print(f"🔄 AGENT TRANSFER REQUESTED: {user_input}")
+            print(f"   Customer: {customer_name}")
+            print(f"   Service: {service_type}")
+            print(f"   Urgency: {urgency_level}")
+            
+            # Return transfer response
+            if customer_name:
+                return "TTS", f"Of course {customer_name}! I'll transfer you to our team now. Please hold while I connect you."
+            else:
+                return "TTS", "I'll transfer you to our team now. Please hold while I connect you."
+        
+        return None, None
+    
     def _build_base_prompt(self):
         """Build the base prompt for GPT response selection"""
         
@@ -430,12 +474,17 @@ Apply the rules from your system prompt. Choose appropriate files or GENERATE re
             import time
             start = time.time()
             
-            # PRIORITY 1: Check for appointment booking first
+            # PRIORITY 1: Check for agent transfer request
+            response_type, content = self._handle_agent_transfer(user_input, session)
+            if response_type:
+                return response_type, content
+            
+            # PRIORITY 2: Check for appointment booking
             response_type, content = self._handle_appointment_booking(user_input, session)
             if response_type:
                 return response_type, content
             
-            # PRIORITY 2: Standard GPT response for other queries
+            # PRIORITY 3: Standard GPT response for other queries
             # Build messages with cached system prompt + lightweight context
             messages = [
                 {"role": "system", "content": self.base_prompt},

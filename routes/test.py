@@ -87,6 +87,8 @@ def test_page():
         <li><a href="/debug/audio_files">View Audio Files</a></li>
         <li><a href="/debug/call_logs">Download Call Logs</a></li>
         <li><a href="/debug/system_health">System Health Check</a></li>
+        <li><a href="/debug/call_forwarding">Call Forwarding Status</a></li>
+        <li><a href="/debug/agent_transfer">Agent Transfer Status</a></li>
     </ul>
     
     <br>
@@ -195,6 +197,113 @@ def debug_system_health():
     for api, status in api_checks.items():
         html += f"<li><strong>{api}:</strong> {status}</li>\n"
     html += "</ul>\n"
+    
+    html += "<p><a href='/test'>← Back to Test Page</a></p>"
+    
+    return html
+
+@test_bp.route("/debug/call_forwarding")
+def debug_call_forwarding():
+    """Test call forwarding configuration"""
+    from config import Config
+    
+    html = "<h2>📞 Call Forwarding Configuration</h2>\n"
+    
+    # Show current configuration
+    html += "<h3>⚙️ Current Settings:</h3>\n<ul>\n"
+    html += f"<li><strong>Enabled:</strong> {'✅ Yes' if Config.CALL_FORWARDING['enabled'] else '❌ No'}</li>\n"
+    html += f"<li><strong>Forward To:</strong> {Config.CALL_FORWARDING['forward_to_number']}</li>\n"
+    html += f"<li><strong>Message:</strong> \"{Config.CALL_FORWARDING['forward_message']}\"</li>\n"
+    html += f"<li><strong>Timeout:</strong> {Config.CALL_FORWARDING['timeout']} seconds</li>\n"
+    html += "</ul>\n"
+    
+    # Show what happens based on current setting
+    if Config.CALL_FORWARDING['enabled']:
+        html += "<h3>🔄 Current Behavior:</h3>\n"
+        html += "<p style='color: green;'><strong>✅ CALLS WILL BE FORWARDED</strong></p>\n"
+        html += f"<p>When someone calls your Twilio number, they will:</p>\n"
+        html += f"<ol>\n"
+        html += f"<li>Hear: \"{Config.CALL_FORWARDING['forward_message']}\"</li>\n"
+        html += f"<li>Be transferred to: {Config.CALL_FORWARDING['forward_to_number']}</li>\n"
+        html += f"<li>If no answer within {Config.CALL_FORWARDING['timeout']} seconds, call ends</li>\n"
+        html += f"</ol>\n"
+    else:
+        html += "<h3>🤖 Current Behavior:</h3>\n"
+        html += "<p style='color: blue;'><strong>✅ AI ASSISTANT MODE</strong></p>\n"
+        html += f"<p>When someone calls your Twilio number, they will:</p>\n"
+        html += f"<ol>\n"
+        html += f"<li>Be greeted by Jason (AI assistant)</li>\n"
+        html += f"<li>Have a conversation about plumbing services</li>\n"
+        html += f"<li>Get help with bookings, pricing, and inquiries</li>\n"
+        html += f"</ol>\n"
+    
+    # Configuration instructions
+    html += "<h3>🔧 How to Change:</h3>\n"
+    html += "<p>To enable/disable call forwarding, edit <code>config.py</code>:</p>\n"
+    html += "<pre><code># In config.py, find CALL_FORWARDING section:\n"
+    html += "CALL_FORWARDING = {\n"
+    html += "    \"enabled\": True,  # Set to True to enable forwarding\n"
+    html += "    \"forward_to_number\": \"+61412345678\",  # Your existing number\n"
+    html += "    \"forward_message\": \"Please hold...\",  # Message before transfer\n"
+    html += "    \"timeout\": 30  # Timeout in seconds\n"
+    html += "}</code></pre>\n"
+    
+    html += "<p><a href='/test'>← Back to Test Page</a></p>"
+    
+    return html
+
+@test_bp.route("/debug/agent_transfer")
+def debug_agent_transfer():
+    """Test agent transfer configuration"""
+    from config import Config
+    
+    html = "<h2>👥 Agent Transfer Configuration</h2>\n"
+    
+    # Show current configuration
+    html += "<h3>⚙️ Current Settings:</h3>\n<ul>\n"
+    html += f"<li><strong>Enabled:</strong> {'✅ Yes' if Config.AGENT_TRANSFER['enabled'] else '❌ No'}</li>\n"
+    html += f"<li><strong>Agent Number:</strong> {Config.AGENT_TRANSFER['agent_number']}</li>\n"
+    html += f"<li><strong>Transfer Message:</strong> \"{Config.AGENT_TRANSFER['transfer_message']}\"</li>\n"
+    html += f"<li><strong>Timeout:</strong> {Config.AGENT_TRANSFER['transfer_timeout']} seconds</li>\n"
+    html += "</ul>\n"
+    
+    # Show transfer keywords
+    html += "<h3>🔑 Transfer Keywords:</h3>\n<ul>\n"
+    for keyword in Config.AGENT_TRANSFER['transfer_keywords']:
+        html += f"<li><code>{keyword}</code></li>\n"
+    html += "</ul>\n"
+    
+    # Show auto-transfer conditions
+    html += "<h3>🚨 Auto-Transfer Conditions:</h3>\n<ul>\n"
+    for condition in Config.AGENT_TRANSFER['auto_transfer_conditions']:
+        html += f"<li><code>{condition}</code></li>\n"
+    html += "</ul>\n"
+    
+    # Show what happens
+    if Config.AGENT_TRANSFER['enabled']:
+        html += "<h3>🔄 Transfer Behavior:</h3>\n"
+        html += "<p style='color: green;'><strong>✅ AGENT TRANSFER ENABLED</strong></p>\n"
+        html += f"<p>During AI conversations, customers can:</p>\n"
+        html += f"<ol>\n"
+        html += f"<li>Say transfer keywords (e.g., \"speak to agent\")</li>\n"
+        html += f"<li>Be automatically transferred for urgent issues</li>\n"
+        html += f"<li>Hear: \"{Config.AGENT_TRANSFER['transfer_message']}\"</li>\n"
+        html += f"<li>Be transferred to: {Config.AGENT_TRANSFER['agent_number']}</li>\n"
+        html += f"</ol>\n"
+    else:
+        html += "<h3>🤖 Current Behavior:</h3>\n"
+        html += "<p style='color: blue;'><strong>✅ AI-ONLY MODE</strong></p>\n"
+        html += f"<p>All conversations stay with Jason (AI assistant)</p>\n"
+    
+    # Test scenarios
+    html += "<h3>🧪 Test Scenarios:</h3>\n"
+    html += "<p>To test agent transfer:</p>\n"
+    html += "<ol>\n"
+    html += "<li>Start a call with Jason</li>\n"
+    html += "<li>Say: \"I want to speak to a human\"</li>\n"
+    html += "<li>Or say: \"This is an emergency\"</li>\n"
+    html += "<li>Jason should transfer you to the agent number</li>\n"
+    html += "</ol>\n"
     
     html += "<p><a href='/test'>← Back to Test Page</a></p>"
     

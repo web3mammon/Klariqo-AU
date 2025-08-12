@@ -33,6 +33,35 @@ class Config:
     }
     
     # ============================================================================
+    # 📞 CALL FORWARDING CONFIGURATION
+    # ============================================================================
+    # Call forwarding settings for incoming calls
+    CALL_FORWARDING = {
+        "enabled": False,                             # Set to True to enable call forwarding
+        "forward_to_number": "+61412345678",          # Number to forward calls to (client's existing number)
+        "forward_message": "Please hold while I transfer you to our team.",  # Message before forwarding
+        "timeout": 30                                 # Timeout in seconds for forwarded call
+    }
+
+    # ============================================================================
+    # 👥 AGENT TRANSFER CONFIGURATION
+    # ============================================================================
+    # Agent transfer settings for "speak to agent" functionality
+    AGENT_TRANSFER = {
+        "enabled": True,                              # Set to True to enable agent transfer
+        "agent_number": "+61412345678",               # Number to transfer to (same as forward_to_number usually)
+        "transfer_message": "I'll transfer you to our team now. Please hold.",  # Message before transfer
+        "transfer_timeout": 30,                       # Timeout in seconds for transfer
+        "transfer_keywords": [                        # Keywords that trigger transfer
+            "speak to agent", "human", "real person", "transfer", 
+            "speak to someone", "talk to someone", "agent", "representative"
+        ],
+        "auto_transfer_conditions": [                 # Conditions for automatic transfer
+            "emergency", "urgent", "complaint", "escalate"
+        ]
+    }
+    
+    # ============================================================================
     # 🎙️ VOICE & TTS CONFIGURATION
     # ============================================================================
     # ElevenLabs Voice Settings

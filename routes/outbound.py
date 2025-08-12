@@ -13,7 +13,7 @@ import time
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from flask import Blueprint, request
-from twilio.twiml.voice_response import VoiceResponse, Connect, Stream
+from twilio.twiml.voice_response import VoiceResponse, Connect, Stream, Dial
 from twilio.rest import Client
 
 from config import Config
@@ -156,6 +156,29 @@ def continue_outbound_conversation(call_sid):
             else:
                 twiml_response.say("Sorry, I'm having trouble generating audio.")
                 call_logger.log_nisha_tts_response(call_sid, "TTS generation failed")
+        
+        # Check for agent transfer request
+        transfer_requested = session.get_session_variable("transfer_requested")
+        if transfer_requested == "yes":
+            print(f"🔄 EXECUTING AGENT TRANSFER for outbound call {call_sid}")
+            
+            # Play transfer message
+            if Config.AGENT_TRANSFER["transfer_message"]:
+                twiml_response.say(Config.AGENT_TRANSFER["transfer_message"])
+            
+            # Transfer the call
+            dial = Dial(
+                timeout=Config.AGENT_TRANSFER["transfer_timeout"],
+                caller_id=Config.TWILIO_PHONE
+            )
+            dial.number(Config.AGENT_TRANSFER["agent_number"])
+            twiml_response.append(dial)
+            
+            # Log transfer
+            call_logger.log_call_end(call_sid, "transferred_to_agent")
+            session_manager.remove_session(call_sid)
+            
+            return str(twiml_response)
         
         # Check if conversation should end
         if any(word in content.lower() for word in ["goodbye", "goodbye1.mp3"]):
