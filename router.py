@@ -120,12 +120,13 @@ class ResponseRouter:
         elif any(word in user_lower for word in ["evening", "after work", "late", "4", "5", "6", "7", "8"]):
             session.update_session_variable("preferred_time", "evening")
         
-        # Extract date preferences with current date context in Australian timezone
+        # Extract date preferences with current date context in client's timezone
         from datetime import datetime, timedelta
         import pytz
         
-        # Use Australian timezone (AEST/AEDT - automatically handles daylight saving)
-        australia_tz = pytz.timezone('Australia/Sydney')
+        # Use client's specific timezone from config
+        client_timezone = Config.get_australian_timezone(Config.CLIENT_CONFIG["city"])
+        australia_tz = pytz.timezone(client_timezone)
         current_date = datetime.now(australia_tz)
         tomorrow = current_date + timedelta(days=1)
         
@@ -177,12 +178,13 @@ class ResponseRouter:
         from config import Config
         available_slots = Config.PLUMBING_AVAILABILITY["available_slots"]
         
-        # Get current date context for relative dates in Australian timezone
+        # Get current date context for relative dates in client's timezone
         from datetime import datetime, timedelta
         import pytz
         
-        # Use Australian timezone (AEST/AEDT - automatically handles daylight saving)
-        australia_tz = pytz.timezone('Australia/Sydney')
+        # Use client's specific timezone from config
+        client_timezone = Config.get_australian_timezone(Config.CLIENT_CONFIG["city"])
+        australia_tz = pytz.timezone(client_timezone)
         current_date = datetime.now(australia_tz)
         today_str = current_date.strftime("%A, %B %d")
         tomorrow_str = (current_date + timedelta(days=1)).strftime("%A, %B %d")
@@ -474,12 +476,13 @@ Remember: Always be helpful, professional, and ready to book appointments with a
     def _build_context_prompt(self, session, user_input):
         """Build context prompt with dynamic session variables"""
         
-        # Get current date and time for context in Australian timezone
+        # Get current date and time for context in client's timezone
         from datetime import datetime, timedelta
         import pytz
         
-        # Use Australian timezone (AEST/AEDT - automatically handles daylight saving)
-        australia_tz = pytz.timezone('Australia/Sydney')
+        # Use client's specific timezone from config
+        client_timezone = Config.get_australian_timezone(Config.CLIENT_CONFIG["city"])
+        australia_tz = pytz.timezone(client_timezone)
         current_datetime = datetime.now(australia_tz)
         current_date = current_datetime.strftime("%A, %B %d, %Y")
         current_time = current_datetime.strftime("%I:%M %p")

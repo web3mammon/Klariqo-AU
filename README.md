@@ -24,7 +24,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Smart File Selection** - AI automatically chooses appropriate audio responses
 - **Structured Prompting** - Rule-based responses with intelligent fallbacks
 - **Session Memory** - Prevents repetitive responses, natural conversations
-- **Real-time Date/Time Context** - GPT always knows current Australian date/time (AEST/AEDT) for accurate "today"/"tomorrow" handling
+- **Configurable Australian Timezones** - GPT uses client-specific timezone (Sydney, Melbourne, Brisbane, Adelaide, Perth, etc.) for accurate "today"/"tomorrow" handling
 
 ### **📞 Call Management Features**
 - **Call Forwarding** - Configurable boolean flag to forward calls to existing business numbers
@@ -40,7 +40,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Customer Data Export** - Automatic CSV export of customer information and booking details
 - **Business Analytics Dashboard** - Real-time customer data visualization and download
 - **Complete Customer Tracking** - Name, phone, location, service type, urgency, issue description
-- **Australian Date/Time Context** - All customer timing preferences properly understood in AEST/AEDT
+- **Configurable Australian Timezones** - All customer timing preferences properly understood in client's specific timezone
 
 ## 🎯 What This Does
 
@@ -52,7 +52,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Call forwarding capability** - Forward calls to existing business numbers
 - **Agent transfer system** - Transfer to human agents when customers request
 - **Complete customer data capture** - Name, phone, location, service, urgency, issue description
-- **Real-time Australian date/time awareness** - Proper handling of "today", "tomorrow", scheduling in AEST/AEDT
+- **Configurable Australian timezone awareness** - Proper handling of "today", "tomorrow", scheduling in client's specific timezone
 - Falls back to **real-time TTS** (with μ-law conversion) only when needed
 - **Excel-driven content management** for easy updates by business staff
 - **Automatic customer data collection** and CSV export for business reporting
@@ -84,6 +84,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 3. **[AGENT_TRANSFER_GUIDE.md](AGENT_TRANSFER_GUIDE.md)** - How the agent transfer system works and configuration options
 4. **[CUSTOMER_DATA_TRACKING_GUIDE.md](CUSTOMER_DATA_TRACKING_GUIDE.md)** - Complete guide to customer data capture, logging, and export
 5. **[API_INTEGRATION_GUIDE.md](API_INTEGRATION_GUIDE.md)** - Detailed API setup and configuration for all services
+6. **[AUSTRALIAN_TIMEZONE_GUIDE.md](AUSTRALIAN_TIMEZONE_GUIDE.md)** - Configurable timezone system for different Australian cities
 
 ### **Quick Reference for Different Roles:**
 
@@ -96,6 +97,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - Review `API_INTEGRATION_GUIDE.md` for technical setup
 - Study `AGENT_TRANSFER_GUIDE.md` for transfer logic implementation
 - Check `CUSTOMER_DATA_TRACKING_GUIDE.md` for data flow architecture
+- Reference `AUSTRALIAN_TIMEZONE_GUIDE.md` for timezone configuration
 
 **For Business Analysts:**
 - Focus on `CUSTOMER_DATA_TRACKING_GUIDE.md` for analytics capabilities
@@ -665,7 +667,7 @@ This system is **immediately deployable** for any business. Here's what you get:
 
 **Customer Data & Analytics:**
 - ✅ **Complete Customer Tracking** - Name, phone, location, service, urgency, issue description
-- ✅ **Real-time Australian Date/Time Context** - Accurate "today"/"tomorrow" handling in AEST/AEDT
+- ✅ **Configurable Australian Timezones** - Accurate "today"/"tomorrow" handling in client's specific timezone
 - ✅ **CSV Export System** - Business-ready data files for CRM integration
 - ✅ **Session Data Exporter** - Automatic customer data collection and export
 - ✅ **Business Intelligence** - Analytics on call patterns and customer behavior

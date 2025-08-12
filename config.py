@@ -33,6 +33,112 @@ class Config:
     }
     
     # ============================================================================
+    # 🌏 AUSTRALIAN TIMEZONE MAPPING - SUPPORT FOR ALL AUSTRALIAN CITIES
+    # ============================================================================
+    # Comprehensive mapping of Australian cities to their timezones
+    # This allows the system to automatically use the correct timezone based on client location
+    AUSTRALIAN_TIMEZONES = {
+        # New South Wales (AEST/AEDT - UTC+10/+11)
+        "Sydney": "Australia/Sydney",
+        "Melbourne": "Australia/Melbourne", 
+        "Canberra": "Australia/Sydney",
+        "Newcastle": "Australia/Sydney",
+        "Wollongong": "Australia/Sydney",
+        "Central Coast": "Australia/Sydney",
+        "Gold Coast": "Australia/Sydney",
+        "Coffs Harbour": "Australia/Sydney",
+        "Port Macquarie": "Australia/Sydney",
+        "Tweed Heads": "Australia/Sydney",
+        
+        # Victoria (AEST/AEDT - UTC+10/+11)
+        "Geelong": "Australia/Melbourne",
+        "Ballarat": "Australia/Melbourne",
+        "Bendigo": "Australia/Melbourne",
+        "Shepparton": "Australia/Melbourne",
+        "Mildura": "Australia/Melbourne",
+        "Warrnambool": "Australia/Melbourne",
+        "Albury": "Australia/Melbourne",
+        "Wodonga": "Australia/Melbourne",
+        
+        # Queensland (AEST - UTC+10, NO daylight saving)
+        "Brisbane": "Australia/Brisbane",
+        "Gold Coast": "Australia/Brisbane",  # Note: Gold Coast is in QLD, not NSW
+        "Townsville": "Australia/Brisbane",
+        "Cairns": "Australia/Brisbane",
+        "Toowoomba": "Australia/Brisbane",
+        "Mackay": "Australia/Brisbane",
+        "Rockhampton": "Australia/Brisbane",
+        "Bundaberg": "Australia/Brisbane",
+        "Hervey Bay": "Australia/Brisbane",
+        "Sunshine Coast": "Australia/Brisbane",
+        "Ipswich": "Australia/Brisbane",
+        "Logan": "Australia/Brisbane",
+        
+        # South Australia (ACST/ACDT - UTC+9:30/+10:30)
+        "Adelaide": "Australia/Adelaide",
+        "Mount Gambier": "Australia/Adelaide",
+        "Whyalla": "Australia/Adelaide",
+        "Murray Bridge": "Australia/Adelaide",
+        "Port Augusta": "Australia/Adelaide",
+        "Port Pirie": "Australia/Adelaide",
+        
+        # Western Australia (AWST - UTC+8, NO daylight saving)
+        "Perth": "Australia/Perth",
+        "Fremantle": "Australia/Perth",
+        "Rockingham": "Australia/Perth",
+        "Mandurah": "Australia/Perth",
+        "Albany": "Australia/Perth",
+        "Bunbury": "Australia/Perth",
+        "Geraldton": "Australia/Perth",
+        "Kalgoorlie": "Australia/Perth",
+        
+        # Tasmania (AEST/AEDT - UTC+10/+11)
+        "Hobart": "Australia/Hobart",
+        "Launceston": "Australia/Hobart",
+        "Devonport": "Australia/Hobart",
+        "Burnie": "Australia/Hobart",
+        
+        # Northern Territory (ACST - UTC+9:30, NO daylight saving)
+        "Darwin": "Australia/Darwin",
+        "Alice Springs": "Australia/Darwin",
+        "Palmerston": "Australia/Darwin",
+        
+        # Australian Capital Territory (AEST/AEDT - UTC+10/+11)
+        "Canberra": "Australia/Sydney",  # ACT uses same timezone as NSW
+        
+        # Default fallback
+        "default": "Australia/Sydney"
+    }
+    
+    # Helper function to get timezone for any Australian city
+    @staticmethod
+    def get_australian_timezone(city_name):
+        """
+        Get the correct timezone for an Australian city
+        
+        Args:
+            city_name (str): Name of the Australian city
+            
+        Returns:
+            str: pytz timezone string (e.g., 'Australia/Sydney')
+        """
+        # Normalize city name (remove spaces, convert to title case)
+        normalized_city = city_name.strip().title()
+        
+        # Check if city exists in our mapping
+        if normalized_city in Config.AUSTRALIAN_TIMEZONES:
+            return Config.AUSTRALIAN_TIMEZONES[normalized_city]
+        
+        # If not found, try partial matches
+        for city, timezone in Config.AUSTRALIAN_TIMEZONES.items():
+            if city_name.lower() in city.lower() or city.lower() in city_name.lower():
+                return timezone
+        
+        # Fallback to default (Sydney timezone)
+        print(f"⚠️  City '{city_name}' not found in timezone mapping. Using default: Australia/Sydney")
+        return Config.AUSTRALIAN_TIMEZONES["default"]
+    
+    # ============================================================================
     # 📞 CALL FORWARDING CONFIGURATION
     # ============================================================================
     # Call forwarding settings for incoming calls
