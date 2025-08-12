@@ -2,7 +2,7 @@
 
 **Production-Ready Business Voice System** | Ultra-Fast μ-law Streaming | Patent-Pending Technology
 
-Intelligent AI voice assistant that handles customer inquiries across multiple industries. Features **human-like conversation memory** and **contextual responses** optimized for Australian and New Zealand telephony systems.
+Intelligent AI voice assistant that handles customer inquiries across multiple industries. Features **human-like conversation memory**, **contextual responses**, **call forwarding**, **agent transfer**, and **comprehensive customer data tracking** optimized for Australian and New Zealand telephony systems.
 
 ## 🆕 **Version 3.0 - Twilio AU/NZ Production**
 
@@ -24,6 +24,13 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Smart File Selection** - AI automatically chooses appropriate audio responses
 - **Structured Prompting** - Rule-based responses with intelligent fallbacks
 - **Session Memory** - Prevents repetitive responses, natural conversations
+- **Real-time Date/Time Context** - GPT always knows current Australian date/time (AEST/AEDT) for accurate "today"/"tomorrow" handling
+
+### **📞 Call Management Features**
+- **Call Forwarding** - Configurable boolean flag to forward calls to existing business numbers
+- **Agent Transfer** - Mid-conversation transfer to human agents when requested
+- **Emergency Handling** - Automatic transfer for urgent situations
+- **Flexible Setup** - Support for both AI-first and direct-forwarding modes
 
 ### **📊 Enterprise Features** 
 - **Comprehensive Logging** - Every call tracked in CSV format
@@ -32,14 +39,20 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Debug Endpoints** - System health monitoring and troubleshooting
 - **Customer Data Export** - Automatic CSV export of customer information and booking details
 - **Business Analytics Dashboard** - Real-time customer data visualization and download
+- **Complete Customer Tracking** - Name, phone, location, service type, urgency, issue description
+- **Australian Date/Time Context** - All customer timing preferences properly understood in AEST/AEDT
 
 ## 🎯 What This Does
 
-- **AI Assistant** handles customer inquiries across multiple industries (hotels, real estate, schools, etc.)
+- **AI Assistant** handles customer inquiries across multiple industries (hotels, real estate, schools, plumbing, etc.)
 - Handles both **inbound** (customers calling business) and **outbound** (business calling customers) 
 - Uses **pre-recorded μ-law audio snippets** for ultra-fast, human-like responses
 - **Smart AI with conversation memory** remembers customer conversation context
 - **Dynamic contextual responses** based on gathered information (industry-specific details)
+- **Call forwarding capability** - Forward calls to existing business numbers
+- **Agent transfer system** - Transfer to human agents when customers request
+- **Complete customer data capture** - Name, phone, location, service, urgency, issue description
+- **Real-time Australian date/time awareness** - Proper handling of "today", "tomorrow", scheduling in AEST/AEDT
 - Falls back to **real-time TTS** (with μ-law conversion) only when needed
 - **Excel-driven content management** for easy updates by business staff
 - **Automatic customer data collection** and CSV export for business reporting
@@ -58,6 +71,36 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - **Comprehensive Logging**: Tracks all conversations for business analytics
 - **Customer Data Export**: Automatic collection and CSV export of customer information
 - **Business Dashboard**: Real-time customer data visualization and download
+- **Call Forwarding**: Forward calls to existing business numbers
+- **Agent Transfer**: Transfer to human agents when needed
+- **Complete Customer Tracking**: All essential customer details captured and logged
+
+## 📚 **Documentation & Guides**
+
+### **Essential Reading for New Team Members:**
+
+1. **[CLIENT_ADAPTATION_GUIDE.md](CLIENT_ADAPTATION_GUIDE.md)** - Complete step-by-step guide for adapting this system to different industries and clients
+2. **[CALL_FORWARDING_GUIDE.md](CALL_FORWARDING_GUIDE.md)** - How to configure call forwarding to existing business numbers
+3. **[AGENT_TRANSFER_GUIDE.md](AGENT_TRANSFER_GUIDE.md)** - How the agent transfer system works and configuration options
+4. **[CUSTOMER_DATA_TRACKING_GUIDE.md](CUSTOMER_DATA_TRACKING_GUIDE.md)** - Complete guide to customer data capture, logging, and export
+5. **[API_INTEGRATION_GUIDE.md](API_INTEGRATION_GUIDE.md)** - Detailed API setup and configuration for all services
+
+### **Quick Reference for Different Roles:**
+
+**For VAs & Content Teams:**
+- Start with `CLIENT_ADAPTATION_GUIDE.md` for industry customization
+- Use `CUSTOMER_DATA_TRACKING_GUIDE.md` to understand what data is captured
+- Reference `CALL_FORWARDING_GUIDE.md` for client setup options
+
+**For Python Developers:**
+- Review `API_INTEGRATION_GUIDE.md` for technical setup
+- Study `AGENT_TRANSFER_GUIDE.md` for transfer logic implementation
+- Check `CUSTOMER_DATA_TRACKING_GUIDE.md` for data flow architecture
+
+**For Business Analysts:**
+- Focus on `CUSTOMER_DATA_TRACKING_GUIDE.md` for analytics capabilities
+- Review `CALL_FORWARDING_GUIDE.md` for business setup options
+- Use `CLIENT_ADAPTATION_GUIDE.md` for client requirements gathering
 
 ## 🔐 **IMPORTANT: Git & Audio Files Management**
 
@@ -146,19 +189,20 @@ CA125,2024-08-01,16:20:33,Mike Wilson,0498765432,emergency,Emergency - Immediate
 
 ```
 ├── main.py                 # Application runner & WebSocket handler with μ-law streaming
-├── config.py              # Centralized configuration management  
-├── session.py             # Call session state management
-├── router.py              # AI-powered response selection (Multi-model support)
+├── config.py              # Centralized configuration management (call forwarding, agent transfer)
+├── session.py             # Call session state management with customer data tracking
+├── router.py              # AI-powered response selection with date/time context
 ├── audio_manager.py       # μ-law audio file library management with memory caching
 ├── tts_engine.py          # ElevenLabs TTS fallback with MP3→μ-law conversion
-├── logger.py              # Structured call logging to CSV
+├── logger.py              # Structured call logging to CSV with customer data export
+├── session_data_exporter.py # Customer data export and business analytics
 ├── routes/
-│   ├── inbound.py         # Inbound call handlers
+│   ├── inbound.py         # Inbound call handlers with forwarding/transfer support
 │   ├── outbound.py        # Outbound call & campaign management
-│   └── test.py            # Testing & debug endpoints
+│   └── test.py            # Testing & debug endpoints (call forwarding, agent transfer)
 ├── audio_optimised/       # Original high-quality audio files (MP3)
 ├── audio_ulaw/            # μ-law audio files (8-bit, 8kHz, mono) - USED BY SYSTEM
-├── logs/                  # Call logs and conversation transcripts
+├── logs/                  # Call logs, conversation transcripts, customer data
 ├── temp/                  # Temporary TTS generated files
 ├── audio_snippets.json    # Auto-generated from Excel (don't edit manually)
 ├── audio_files.xlsx       # YOUR MAIN AUDIO MANAGEMENT FILE
@@ -166,7 +210,34 @@ CA125,2024-08-01,16:20:33,Mike Wilson,0498765432,emergency,Emergency - Immediate
 ├── audio-optimiser.py     # MP3→μ-law conversion utility
 ├── .env                   # Environment variables & API keys
 └── requirements.txt       # Python dependencies
+
+📚 Documentation:
+├── CLIENT_ADAPTATION_GUIDE.md      # Industry adaptation guide
+├── CALL_FORWARDING_GUIDE.md        # Call forwarding configuration
+├── AGENT_TRANSFER_GUIDE.md         # Agent transfer system guide
+├── CUSTOMER_DATA_TRACKING_GUIDE.md # Customer data capture & export
+└── API_INTEGRATION_GUIDE.md        # API setup & configuration
 ```
+
+## 📞 **Call Management Features**
+
+### **Call Forwarding System**
+- **Configurable Boolean Flag**: `CALL_FORWARDING["enabled"]` in `config.py`
+- **Two Modes**: AI Assistant mode vs Direct Forwarding mode
+- **Customizable Settings**: Forward-to number, message, timeout
+- **Business Flexibility**: Easy adaptation for different client preferences
+
+### **Agent Transfer System**
+- **Mid-Conversation Transfer**: Transfer to human agents when requested
+- **Automatic Detection**: Keywords like "speak to agent", "human", "emergency"
+- **Context Preservation**: Customer details passed to human agent
+- **Flexible Configuration**: Transfer keywords and conditions customizable
+
+### **Customer Data Tracking**
+- **Real-time Capture**: Name, phone, location, service type, urgency, issue description
+- **Date/Time Context**: GPT always knows current date/time for accurate scheduling
+- **CSV Export**: Business-ready data files for CRM integration
+- **Session Persistence**: Data survives connection issues and technical problems
 
 ## 📋 Prerequisites
 
@@ -321,6 +392,26 @@ router_response = "intro_business.mp3 + pricing_basic.mp3"
 3. Answer the call and test customer inquiry scenarios
 4. Experience AI handling inquiries with ultra-low latency!
 
+### **New Feature Testing**
+
+**Call Forwarding Test:**
+1. Visit `http://your-ngrok-url/debug/call_forwarding`
+2. Check current configuration status
+3. Test with `CALL_FORWARDING["enabled"] = True` in `config.py`
+4. Verify calls are forwarded to specified number
+
+**Agent Transfer Test:**
+1. Visit `http://your-ngrok-url/debug/agent_transfer`
+2. Check transfer keywords and configuration
+3. During a call, say "I want to speak to a human"
+4. Verify transfer to agent number
+
+**Customer Data Tracking Test:**
+1. Visit `http://your-ngrok-url/debug/call_logs`
+2. Make a test call with customer details
+3. Check `logs/customer_data.csv` for captured information
+4. Verify date/time context works correctly
+
 ### API Testing
 ```bash
 # Start outbound campaign
@@ -331,6 +422,12 @@ curl http://your-ngrok-url/debug/system_health
 
 # System health check
 curl http://your-ngrok-url/
+
+# Test call forwarding configuration
+curl http://your-ngrok-url/debug/call_forwarding
+
+# Test agent transfer configuration  
+curl http://your-ngrok-url/debug/agent_transfer
 ```
 
 ## 📞 Telephony Integration
@@ -457,6 +554,33 @@ python -c "from audio_manager import audio_manager; print(f'Loaded: {len(audio_m
 - ✅ Check WebSocket message format uses `streamSid` (camelCase)
 - ✅ Test with single audio file first
 
+### **New Feature Troubleshooting**
+
+**"Call forwarding not working"**
+- ✅ Check `CALL_FORWARDING["enabled"]` is set to `True` in `config.py`
+- ✅ Verify `forward_to_number` is a valid phone number
+- ✅ Test configuration at `/debug/call_forwarding`
+- ✅ Ensure Twilio number is properly configured
+
+**"Agent transfer not triggering"**
+- ✅ Check `AGENT_TRANSFER["enabled"]` is set to `True` in `config.py`
+- ✅ Verify transfer keywords in configuration
+- ✅ Test configuration at `/debug/agent_transfer`
+- ✅ Ensure agent number is valid and reachable
+
+**"Customer data not being captured"**
+- ✅ Check session variables are being updated in `router.py`
+- ✅ Verify logger is receiving session variables
+- ✅ Check `logs/customer_data.csv` for data export
+- ✅ Test with explicit customer information in conversation
+
+**"Date/time context not working"**
+- ✅ Verify current Australian date/time (AEST/AEDT) is being passed to GPT
+- ✅ Check router context prompt includes date information
+- ✅ Test with "today" or "tomorrow" in conversation
+- ✅ Ensure system clock is correct
+- ✅ Verify pytz is installed for timezone handling
+
 ### **Debug Commands**
 ```bash
 # Test audio cache loading
@@ -471,9 +595,19 @@ py -c "from audio_manager import audio_manager; stats = audio_manager.get_memory
 # Test TTS conversion
 py -c "from main import convert_mp3_to_ulaw_for_tts; print('TTS conversion available:', convert_mp3_to_ulaw_for_tts is not None)"
 
+# Test call forwarding configuration
+py -c "from config import Config; print('Call forwarding enabled:', Config.CALL_FORWARDING['enabled'])"
+
+# Test agent transfer configuration
+py -c "from config import Config; print('Agent transfer enabled:', Config.AGENT_TRANSFER['enabled'])"
+
+# Test customer data tracking
+py -c "from config import Config; print('Session variables:', len(Config.SESSION_VARIABLES_TEMPLATE))"
+
 # View logs
 tail -f logs/call_logs.csv
 tail -f logs/conversation_logs.csv
+tail -f logs/customer_data.csv
 ```
 
 ## 📈 Performance Metrics & Updates
@@ -512,7 +646,7 @@ tail -f logs/conversation_logs.csv
 ## 🚀 **PRODUCTION DEPLOYMENT CHECKLIST**
 
 ### **✅ System Ready For Deployment (Yes!)**
-This system is **immediately deployable** for any school. Here's what you get:
+This system is **immediately deployable** for any business. Here's what you get:
 
 **Core Features Ready:**
 - ✅ **17 μ-law Audio Files** optimized for Twilio AU/NZ
@@ -523,12 +657,26 @@ This system is **immediately deployable** for any school. Here's what you get:
 - ✅ **Excel-based Content Management**
 - ✅ **Multi-industry Support** (customizable for any business)
 
+**New Call Management Features:**
+- ✅ **Call Forwarding System** - Forward calls to existing business numbers
+- ✅ **Agent Transfer System** - Transfer to human agents when requested
+- ✅ **Emergency Handling** - Automatic transfer for urgent situations
+- ✅ **Flexible Configuration** - AI-first or direct-forwarding modes
+
+**Customer Data & Analytics:**
+- ✅ **Complete Customer Tracking** - Name, phone, location, service, urgency, issue description
+- ✅ **Real-time Australian Date/Time Context** - Accurate "today"/"tomorrow" handling in AEST/AEDT
+- ✅ **CSV Export System** - Business-ready data files for CRM integration
+- ✅ **Session Data Exporter** - Automatic customer data collection and export
+- ✅ **Business Intelligence** - Analytics on call patterns and customer behavior
+
 **Infrastructure Ready:**
 - ✅ **Twilio Integration** with proper TwiML format
 - ✅ **μ-law Audio Streaming** for optimal call quality
 - ✅ **WebSocket Handling** for real-time bidirectional conversation
 - ✅ **Error Handling & Fallbacks** for production stability
 - ✅ **Health Monitoring** endpoints
+- ✅ **Debug Interfaces** for call forwarding, agent transfer, and customer data
 
 ### **🎯 Ready To Launch Tomorrow**
 **Required Time:** ~2 hours to deploy for any AU/NZ business
@@ -623,24 +771,40 @@ py main.py
 2. **Study `router.py`**: Learn how AI matches user input to audio files
 3. **Practice with Excel**: Update `audio_files.xlsx` and test changes
 4. **Test different scenarios**: Ensure comprehensive coverage of user inputs
+5. **Learn date/time context**: Understand how "today"/"tomorrow" are handled
+6. **Review customer data extraction**: See how customer details are captured
 
 ### **For Python Developers**
 1. **Study the architecture**: Main components and data flow
 2. **Understand PCM format**: Why telephony systems need specific audio formats
 3. **Learn WebSocket handling**: How real-time audio streaming works
 4. **Practice debugging**: Use debug commands and log analysis
+5. **Review call management**: Study call forwarding and agent transfer logic
+6. **Understand customer data flow**: Session variables, logging, and export systems
 
 ### **For Content Teams**
 1. **Master Excel workflow**: How to add/update audio content
 2. **Understand categories**: How to organize audio files logically
 3. **Learn quality standards**: Recording quality and transcript accuracy
 4. **Test your changes**: Always verify updates work before deploying
+5. **Review customer tracking**: Understand what data is captured from calls
+6. **Study call management**: Know when calls are forwarded or transferred
 
 ### **For Operations Teams**
 1. **Monitor system health**: Use debug endpoints and log analysis
 2. **Understand metrics**: Response times, cache hit rates, error rates
 3. **Learn troubleshooting**: Common issues and resolution steps
 4. **Track performance**: Monitor call success rates and user satisfaction
+5. **Review customer data**: Check CSV exports and business analytics
+6. **Monitor call management**: Track forwarding and transfer patterns
+
+### **For Business Analysts**
+1. **Study customer data tracking**: Review `CUSTOMER_DATA_TRACKING_GUIDE.md`
+2. **Understand call management**: Review `CALL_FORWARDING_GUIDE.md` and `AGENT_TRANSFER_GUIDE.md`
+3. **Analyze business intelligence**: Use CSV exports for customer analytics
+4. **Review client adaptation**: Study `CLIENT_ADAPTATION_GUIDE.md` for industry customization
+5. **Monitor performance metrics**: Track call success rates and customer satisfaction
+6. **Generate business reports**: Use exported data for client reporting
 
 ## 📄 Patent Information
 

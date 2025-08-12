@@ -20,7 +20,7 @@ The system now comprehensively tracks and logs all essential customer informatio
 11. **Call Date/Time** - When the call occurred
 12. **Call Duration** - How long the conversation lasted
 
-## 📅 **Date/Time Context System**
+## 📅 **Australian Date/Time Context System**
 
 ### **Current Date/Time Always Available:**
 - **Today's Date**: Always provided to GPT (e.g., "Monday, August 5, 2024")
@@ -186,7 +186,7 @@ Expected Data Captured:
 
 ## ✅ **Implementation Status**
 
-- ✅ **Date/Time Context** - GPT always knows current date/time
+- ✅ **Australian Date/Time Context** - GPT always knows current Australian date/time (AEST/AEDT)
 - ✅ **Customer Name Extraction** - Multiple pattern detection
 - ✅ **Phone Number Detection** - Australian format support
 - ✅ **Location Tracking** - Suburb/area extraction
