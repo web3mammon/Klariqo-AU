@@ -62,9 +62,22 @@ class CallLogger:
             'phone_number': phone_number,
             'call_direction': call_direction,
             'start_time': time.time(),
+            'start_timestamp': timestamp,
             'lead_data': lead_data or {},
             'audio_files_used': [],
-            'tts_responses': 0
+            'tts_responses': 0,
+            'customer_details': {
+                'name': None,
+                'phone': phone_number,
+                'location': None,
+                'service_type': None,
+                'urgency_level': None,
+                'issue_description': None,
+                'preferred_date': None,
+                'preferred_time': None,
+                'property_type': None,
+                'previous_customer': None
+            }
         }
         
         # Store in memory for this session
@@ -73,6 +86,19 @@ class CallLogger:
         self._active_calls[call_sid] = call_data
         
         print(f"📞 Call started - {call_direction}: {call_sid}")
+    
+    def update_customer_details(self, call_sid, session_variables):
+        """Update customer details during the call"""
+        if hasattr(self, '_active_calls') and call_sid in self._active_calls:
+            call_data = self._active_calls[call_sid]
+            customer_details = call_data['customer_details']
+            
+            # Update with any new information
+            for key, value in session_variables.items():
+                if value is not None and key in customer_details:
+                    customer_details[key] = value
+            
+            print(f"📝 Updated customer details for {call_sid}: {customer_details}")
     
     def log_conversation_turn(self, call_sid, speaker, message_type, content, 
                             audio_files_used=None, response_time_ms=None):
@@ -117,7 +143,7 @@ class CallLogger:
             if message_type == 'tts':
                 call_data['tts_responses'] += 1
     
-    def log_call_end(self, call_sid, final_status="completed"):
+    def log_call_end(self, call_sid, final_status="completed", session_variables=None):
         """Log the end of a call with summary data"""
         if not hasattr(self, '_active_calls') or call_sid not in self._active_calls:
             print(f"⚠️ No call data found for {call_sid}")
@@ -126,17 +152,43 @@ class CallLogger:
         call_data = self._active_calls[call_sid]
         timestamp = datetime.now().isoformat()
         
+        # Update customer details if provided
+        if session_variables:
+            self.update_customer_details(call_sid, session_variables)
+        
         # Calculate call duration
         call_duration = int(time.time() - call_data['start_time'])
         
         # Count unique audio files used
         unique_audio_files = len(set(call_data['audio_files_used']))
         
-        # Get session flags (if available)
-        session_flags = ""  # Will be passed from session if needed
+        # Get customer details
+        customer_details = call_data['customer_details']
         
         # Format lead data as JSON string
         lead_data_str = str(call_data['lead_data']) if call_data['lead_data'] else ""
+        
+        # Create comprehensive call summary
+        call_summary = {
+            'call_sid': call_sid,
+            'start_time': call_data['start_timestamp'],
+            'end_time': timestamp,
+            'duration_seconds': call_duration,
+            'direction': call_data['call_direction'],
+            'phone_number': call_data['phone_number'],
+            'customer_name': customer_details['name'],
+            'customer_location': customer_details['location'],
+            'service_type': customer_details['service_type'],
+            'urgency_level': customer_details['urgency_level'],
+            'issue_description': customer_details['issue_description'],
+            'preferred_date': customer_details['preferred_date'],
+            'preferred_time': customer_details['preferred_time'],
+            'property_type': customer_details['property_type'],
+            'previous_customer': customer_details['previous_customer'],
+            'audio_files_used': unique_audio_files,
+            'tts_responses': call_data['tts_responses'],
+            'final_status': final_status
+        }
         
         # Write to call log
         with open(self.call_log_file, 'a', newline='', encoding='utf-8') as f:
@@ -145,13 +197,16 @@ class CallLogger:
                 timestamp, call_sid, call_data['phone_number'], 
                 call_data['call_direction'], call_duration,
                 unique_audio_files, call_data['tts_responses'],
-                session_flags, lead_data_str, final_status
+                str(call_summary), lead_data_str, final_status
             ])
+        
+        # Also write to detailed customer data file
+        self._write_customer_data(call_summary)
         
         # Clean up from memory
         del self._active_calls[call_sid]
         
-        print(f"📋 Call logged - Duration: {call_duration}s, Audio files: {unique_audio_files}, TTS: {call_data['tts_responses']}")
+        print(f"📋 Call logged - Duration: {call_duration}s, Customer: {customer_details['name']}, Service: {customer_details['service_type']}")
     
     def log_parent_input(self, call_sid, transcript, response_time_ms=None):
         """Log parent's speech input"""
@@ -264,6 +319,48 @@ class CallLogger:
         except Exception as e:
             print(f"❌ Export failed: {e}")
             return None, None
+
+    def _write_customer_data(self, call_summary):
+        """Write detailed customer data to separate file"""
+        customer_data_file = os.path.join(self.logs_folder, "customer_data.csv")
+        
+        # Create customer data file with headers if it doesn't exist
+        if not os.path.exists(customer_data_file):
+            headers = [
+                'call_date', 'call_time', 'call_sid', 'customer_name', 'customer_phone',
+                'customer_location', 'service_type', 'urgency_level', 'issue_description',
+                'preferred_date', 'preferred_time', 'property_type', 'previous_customer',
+                'call_duration', 'call_status', 'audio_files_used', 'tts_responses'
+            ]
+            with open(customer_data_file, 'w', newline='', encoding='utf-8') as f:
+                writer = csv.writer(f)
+                writer.writerow(headers)
+        
+        # Parse timestamp
+        start_dt = datetime.fromisoformat(call_summary['start_time'].replace('Z', '+00:00'))
+        
+        # Write customer data
+        with open(customer_data_file, 'a', newline='', encoding='utf-8') as f:
+            writer = csv.writer(f)
+            writer.writerow([
+                start_dt.strftime('%Y-%m-%d'),  # call_date
+                start_dt.strftime('%H:%M:%S'),  # call_time
+                call_summary['call_sid'],
+                call_summary['customer_name'] or '',
+                call_summary['phone_number'],
+                call_summary['customer_location'] or '',
+                call_summary['service_type'] or '',
+                call_summary['urgency_level'] or '',
+                call_summary['issue_description'] or '',
+                call_summary['preferred_date'] or '',
+                call_summary['preferred_time'] or '',
+                call_summary['property_type'] or '',
+                call_summary['previous_customer'] or '',
+                call_summary['duration_seconds'],
+                call_summary['final_status'],
+                call_summary['audio_files_used'],
+                call_summary['tts_responses']
+            ])
 
 # Global call logger instance
 call_logger = CallLogger()

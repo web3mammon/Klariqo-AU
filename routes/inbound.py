@@ -152,8 +152,8 @@ def continue_inbound_conversation(call_sid):
             dial.number(Config.AGENT_TRANSFER["agent_number"])
             twiml_response.append(dial)
             
-            # Log transfer
-            call_logger.log_call_end(call_sid, "transferred_to_agent")
+            # Log transfer with session variables
+            call_logger.log_call_end(call_sid, "transferred_to_agent", session.session_variables)
             session_manager.remove_session(call_sid)
             
             return str(twiml_response)
@@ -162,8 +162,8 @@ def continue_inbound_conversation(call_sid):
         if any(word in content.lower() for word in ["goodbye", "goodbye1.mp3"]):
             twiml_response.hangup()
             
-            # Clean up session
-            call_logger.log_call_end(call_sid, "completed")
+            # Clean up session with session variables
+            call_logger.log_call_end(call_sid, "completed", session.session_variables)
             session_manager.remove_session(call_sid)
             
         else:

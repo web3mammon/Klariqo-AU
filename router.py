@@ -61,25 +61,35 @@ class ResponseRouter:
         else:
             session.update_session_variable("property_type", "residential")
         
-        # Extract location/suburb
-        location_indicators = ["in", "at", "from", "located", "address"]
+        # Extract location/suburb with improved logic
+        location_indicators = ["in", "at", "from", "located", "address", "suburb", "area"]
         words = user_input.split()
         for i, word in enumerate(words):
             if any(indicator in word.lower() for indicator in location_indicators):
                 if i < len(words) - 1:
                     potential_location = words[i + 1]
-                    # Common Australian suburbs/areas
-                    if len(potential_location) > 3:  # Avoid short words
-                        session.update_session_variable("customer_location", potential_location.title())
+                    # Common Australian suburbs/areas - check for longer location names
+                    if len(potential_location) > 2:  # Allow shorter suburb names
+                        # Try to get multi-word locations
+                        location_parts = []
+                        for j in range(i + 1, min(i + 4, len(words))):  # Check next 3 words
+                            if words[j].lower() not in ["and", "the", "a", "an", "to", "for", "with"]:
+                                location_parts.append(words[j])
+                        if location_parts:
+                            full_location = " ".join(location_parts).title()
+                            session.update_session_variable("customer_location", full_location)
                 break
         
-        # Extract customer name
+        # Extract customer name with improved patterns
         import re
         name_patterns = [
             r"my name is (\w+)",
             r"i'm (\w+)",
             r"this is (\w+)",
-            r"(\w+) speaking"
+            r"(\w+) speaking",
+            r"call me (\w+)",
+            r"i am (\w+)",
+            r"name's (\w+)"
         ]
         for pattern in name_patterns:
             name_match = re.search(pattern, user_lower)
@@ -88,27 +98,65 @@ class ResponseRouter:
                 session.update_session_variable("customer_name", name)
                 break
         
-        # Extract phone number
-        phone_match = re.search(r'(\d{4}\s?\d{3}\s?\d{3}|\d{10})', user_input)
-        if phone_match:
-            phone = phone_match.group(1)
-            session.update_session_variable("customer_phone", phone)
+        # Extract phone number with improved patterns
+        phone_patterns = [
+            r'(\d{4}\s?\d{3}\s?\d{3})',  # 0412 345 678
+            r'(\d{10})',  # 0412345678
+            r'(\d{2}\s?\d{4}\s?\d{4})',  # 04 1234 5678
+            r'\+61\s?(\d{1}\s?\d{4}\s?\d{4})'  # +61 4 1234 5678
+        ]
+        for pattern in phone_patterns:
+            phone_match = re.search(pattern, user_input)
+            if phone_match:
+                phone = phone_match.group(1).replace(" ", "")
+                session.update_session_variable("customer_phone", phone)
+                break
         
         # Extract time preferences
-        if any(word in user_lower for word in ["morning", "am", "early"]):
+        if any(word in user_lower for word in ["morning", "am", "early", "9", "10", "11"]):
             session.update_session_variable("preferred_time", "morning")
-        elif any(word in user_lower for word in ["afternoon", "pm", "lunch"]):
+        elif any(word in user_lower for word in ["afternoon", "pm", "lunch", "12", "1", "2", "3"]):
             session.update_session_variable("preferred_time", "afternoon")
-        elif any(word in user_lower for word in ["evening", "after work", "late"]):
+        elif any(word in user_lower for word in ["evening", "after work", "late", "4", "5", "6", "7", "8"]):
             session.update_session_variable("preferred_time", "evening")
         
-        # Extract date preferences
-        if any(word in user_lower for word in ["today", "now", "asap"]):
+        # Extract date preferences with current date context
+        from datetime import datetime, timedelta
+        current_date = datetime.now()
+        tomorrow = current_date + timedelta(days=1)
+        
+        if any(word in user_lower for word in ["today", "now", "asap", "straight away"]):
             session.update_session_variable("preferred_date", "today")
         elif any(word in user_lower for word in ["tomorrow"]):
             session.update_session_variable("preferred_date", "tomorrow")
-        elif any(word in user_lower for word in ["this week", "week"]):
+        elif any(word in user_lower for word in ["this week", "week", "sometime this week"]):
             session.update_session_variable("preferred_date", "this_week")
+        elif any(word in user_lower for word in ["next week"]):
+            session.update_session_variable("preferred_date", "next_week")
+        
+        # Extract issue description - capture the main problem description
+        issue_keywords = ["problem", "issue", "broken", "not working", "leaking", "blocked", "clogged", "burst", "flooding"]
+        if any(keyword in user_lower for keyword in issue_keywords):
+            # Try to extract a meaningful description
+            words = user_input.split()
+            issue_start = -1
+            for i, word in enumerate(words):
+                if any(keyword in word.lower() for keyword in issue_keywords):
+                    issue_start = i
+                    break
+            
+            if issue_start != -1:
+                # Get the issue description (next 5-10 words)
+                issue_words = words[issue_start:issue_start + 8]
+                issue_description = " ".join(issue_words)
+                if len(issue_description) > 10:  # Only store if meaningful
+                    session.update_session_variable("issue_description", issue_description)
+        
+        # Track if this is a repeat customer
+        if any(word in user_lower for word in ["before", "last time", "previous", "again", "repeat"]):
+            session.update_session_variable("previous_customer", "yes")
+        elif any(word in user_lower for word in ["first time", "new customer", "never used"]):
+            session.update_session_variable("previous_customer", "no")
     
     def _handle_appointment_booking(self, user_input, session):
         """Handle appointment booking requests with available slots"""
@@ -418,6 +466,13 @@ Remember: Always be helpful, professional, and ready to book appointments with a
     def _build_context_prompt(self, session, user_input):
         """Build context prompt with dynamic session variables"""
         
+        # Get current date and time for context
+        from datetime import datetime, timedelta
+        current_datetime = datetime.now()
+        current_date = current_datetime.strftime("%A, %B %d, %Y")
+        current_time = current_datetime.strftime("%I:%M %p")
+        tomorrow_date = (current_datetime + timedelta(days=1)).strftime("%A, %B %d, %Y")
+        
         # Extract and update session variables from user input
         self._extract_session_variables(user_input, session)
         
@@ -435,6 +490,12 @@ Remember: Always be helpful, professional, and ready to book appointments with a
             personalization_note = f"\n👤 CUSTOMER NAME: {customer_name} - Use their name for personalization when appropriate"
         
         context_prompt = f"""
+📅 CURRENT DATE & TIME CONTEXT:
+Today is {current_date} at {current_time}
+Tomorrow is {tomorrow_date}
+When customer says "today" they mean {current_date}
+When customer says "tomorrow" they mean {tomorrow_date}
+
 🧠 CONVERSATION MEMORY:
 Recently played files (DON'T repeat): {', '.join(recent_files)}
 Recent conversation: {recent_conversation}
@@ -451,6 +512,8 @@ Recent conversation: {recent_conversation}
 - If customer_name and customer_phone are collected, proceed with booking confirmation
 - If customer confirms a time slot, finalize the booking
 - If customer_name is available, use it for personalization (e.g., "Thanks {customer_name}")
+- ALWAYS extract and store customer details: name, phone, location, issue description
+- When customer mentions timing, use the current date context above
 
 🎙️ AUDIO FILE SELECTION GUIDANCE:
 - For general greetings: plumbing_intro.mp3 OR intro_greeting.mp3
