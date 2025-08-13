@@ -187,7 +187,29 @@ class Config:
     TWILIO_ACCOUNT_SID = os.getenv('TWILIO_ACCOUNT_SID')
     TWILIO_AUTH_TOKEN = os.getenv('TWILIO_AUTH_TOKEN')
     TWILIO_PHONE = os.getenv('TWILIO_PHONE')
+    TWILIO_PHONE_NUMBER = os.getenv('TWILIO_PHONE_NUMBER')
     GEMINI_API_KEY = os.getenv('GEMINI_API_KEY')
+    
+    # Google Calendar Integration Configuration
+    GOOGLE_CALENDAR_ID = os.getenv('GOOGLE_CALENDAR_ID', 'primary')  # Default to primary calendar
+    GOOGLE_CREDENTIALS_FILE = os.getenv('GOOGLE_CREDENTIALS_FILE', 'credentials/google-calendar-credentials.json')
+    GOOGLE_CALENDAR_ENABLED = os.getenv('GOOGLE_CALENDAR_ENABLED', 'false').lower() == 'true'
+    GOOGLE_CALENDAR_CACHE_DURATION = int(os.getenv('GOOGLE_CALENDAR_CACHE_DURATION', '300'))  # 5 minutes default
+    
+    # Business hours for calendar integration (in client's timezone)
+    BUSINESS_HOURS = {
+        "monday": {"start": "08:00", "end": "17:00"},
+        "tuesday": {"start": "08:00", "end": "17:00"},
+        "wednesday": {"start": "08:00", "end": "17:00"},
+        "thursday": {"start": "08:00", "end": "17:00"},
+        "friday": {"start": "08:00", "end": "17:00"},
+        "saturday": {"start": "09:00", "end": "15:00"},
+        "sunday": {"start": "00:00", "end": "00:00"}  # Closed
+    }
+    
+    # Appointment duration settings
+    APPOINTMENT_DURATION_MINUTES = int(os.getenv('APPOINTMENT_DURATION_MINUTES', '120'))  # 2 hours default
+    APPOINTMENT_BUFFER_MINUTES = int(os.getenv('APPOINTMENT_BUFFER_MINUTES', '30'))  # 30 min buffer between appointments
     
     # Session Settings
     SILENCE_THRESHOLD = 0.4  # seconds before considering speech complete

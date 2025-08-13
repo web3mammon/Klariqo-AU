@@ -26,6 +26,12 @@ audioop-lts==0.2.1  # For Python 3.12+ compatibility
 librosa==0.10.1     # MP3 to PCM conversion for TTS fallback
 numpy==1.24.3       # Required by librosa for audio processing
 
+# Google Calendar Integration
+google-auth==2.23.4
+google-auth-oauthlib==1.1.0
+google-auth-httplib2==0.1.1
+google-api-python-client==2.108.0
+
 # Optional: Google Sheets integration (future)
 # google-auth==2.23.4
 # google-auth-oauthlib==1.1.0

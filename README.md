@@ -84,7 +84,9 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 3. **[AGENT_TRANSFER_GUIDE.md](AGENT_TRANSFER_GUIDE.md)** - How the agent transfer system works and configuration options
 4. **[CUSTOMER_DATA_TRACKING_GUIDE.md](CUSTOMER_DATA_TRACKING_GUIDE.md)** - Complete guide to customer data capture, logging, and export
 5. **[API_INTEGRATION_GUIDE.md](API_INTEGRATION_GUIDE.md)** - Detailed API setup and configuration for all services
-6. **[AUSTRALIAN_TIMEZONE_GUIDE.md](AUSTRALIAN_TIMEZONE_GUIDE.md)** - Configurable timezone system for different Australian cities
+6. **[CALENDAR_INTEGRATION_GUIDE.md](CALENDAR_INTEGRATION_GUIDE.md)** - Complete Google Calendar integration for real-time appointment booking
+7. **[CLIENT_CALENDAR_SETUP_GUIDE.md](CLIENT_CALENDAR_SETUP_GUIDE.md)** - Simple setup guide for clients to connect their existing Google Calendar
+8. **[AUSTRALIAN_TIMEZONE_GUIDE.md](AUSTRALIAN_TIMEZONE_GUIDE.md)** - Configurable timezone system for different Australian cities
 
 ### **Quick Reference for Different Roles:**
 
@@ -92,6 +94,7 @@ Intelligent AI voice assistant that handles customer inquiries across multiple i
 - Start with `CLIENT_ADAPTATION_GUIDE.md` for industry customization
 - Use `CUSTOMER_DATA_TRACKING_GUIDE.md` to understand what data is captured
 - Reference `CALL_FORWARDING_GUIDE.md` for client setup options
+- Share `CLIENT_CALENDAR_SETUP_GUIDE.md` with clients for Google Calendar integration
 
 **For Python Developers:**
 - Review `API_INTEGRATION_GUIDE.md` for technical setup

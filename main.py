@@ -34,6 +34,13 @@ from audio_manager import audio_manager
 from logger import call_logger
 from session_data_exporter import session_exporter
 
+# Import calendar integration
+try:
+    from calendar_integration import calendar_client
+    CALENDAR_AVAILABLE = True
+except ImportError:
+    CALENDAR_AVAILABLE = False
+
 # Import route blueprints
 from routes.inbound import inbound_bp
 from routes.outbound import outbound_bp
@@ -62,21 +69,87 @@ deepgram_client = DeepgramClient(Config.DEEPGRAM_API_KEY, config)
 # Global variable for ngrok URL
 current_ngrok_url = None
 
+@app.route("/calendar-status", methods=['GET'])
+def calendar_status():
+    """Calendar integration status endpoint"""
+    if not CALENDAR_AVAILABLE:
+        return """
+        <h1>📅 Calendar Integration Status</h1>
+        <p><strong>Status:</strong> ❌ Not Available</p>
+        <p>Google Calendar integration is not installed. Install dependencies:</p>
+        <code>pip install google-auth google-auth-oauthlib google-api-python-client</code>
+        <br><br>
+        <a href="/">← Back to Main</a>
+        """
+    
+    try:
+        status = calendar_client.get_calendar_status()
+        availability = calendar_client.get_available_slots(days_ahead=3)
+        
+        status_html = f"""
+        <h1>📅 Calendar Integration Status</h1>
+        <p><strong>Enabled:</strong> {'✅ Yes' if status['enabled'] else '❌ No'}</p>
+        <p><strong>Service Available:</strong> {'✅ Yes' if status['service_available'] else '❌ No'}</p>
+        <p><strong>Credentials File:</strong> {'✅ Found' if status['credentials_file_exists'] else '❌ Missing'}</p>
+        <p><strong>Calendar ID:</strong> {status['calendar_id']}</p>
+        <p><strong>Cache Size:</strong> {status['cache_size']} entries</p>
+        <br>
+        <h2>📋 Next 3 Days Availability</h2>
+        <p><strong>Total Slots:</strong> {availability.get('total_slots', 0)}</p>
+        <p><strong>Source:</strong> {availability.get('source', 'Unknown')}</p>
+        <p><strong>Last Updated:</strong> {availability.get('last_updated', 'Unknown')}</p>
+        """
+        
+        if availability.get('available_slots'):
+            status_html += "<h3>Available Slots:</h3><ul>"
+            for slot in availability['available_slots'][:5]:  # Show first 5
+                status_html += f"<li>{slot.get('display', 'Unknown')}</li>"
+            if len(availability['available_slots']) > 5:
+                status_html += f"<li>... and {len(availability['available_slots']) - 5} more</li>"
+            status_html += "</ul>"
+        
+        status_html += "<br><a href='/'>← Back to Main</a>"
+        return status_html
+        
+    except Exception as e:
+        return f"""
+        <h1>📅 Calendar Integration Status</h1>
+        <p><strong>Status:</strong> ❌ Error</p>
+        <p><strong>Error:</strong> {str(e)}</p>
+        <br>
+        <a href="/">← Back to Main</a>
+        """
+
 @app.route("/", methods=['GET'])
 def health_check():
     """Health check endpoint"""
     # Get session export statistics
     export_stats = session_exporter.get_export_stats()
     
+    # Get calendar status
+    calendar_status = "❌ Not Available"
+    if CALENDAR_AVAILABLE:
+        try:
+            status = calendar_client.get_calendar_status()
+            if status["enabled"] and status["service_available"]:
+                calendar_status = "✅ Google Calendar Active"
+            elif status["enabled"]:
+                calendar_status = "⚠️ Configured (No Credentials)"
+            else:
+                calendar_status = "📋 Fallback Mode"
+        except:
+            calendar_status = "❌ Error"
+    
     return f"""
             <h1>🔧 {Config.CLIENT_CONFIG['business_name']} - AI Voice Assistant ({Config.CLIENT_CONFIG['ai_assistant_name']})</h1>
     <p><strong>Status:</strong> ✅ Running</p>
     <p><strong>Active Sessions:</strong> {session_manager.get_active_count()}</p>
     <p><strong>Audio Files Cached:</strong> {len(audio_manager.memory_cache)}</p>
-    <p><strong>Available Appointments:</strong> August 2024 slots active</p>
+    <p><strong>Calendar Integration:</strong> {calendar_status}</p>
+    <p><strong>Available Appointments:</strong> Real-time calendar slots</p>
     <p><strong>Customer Data Exported:</strong> {export_stats['total_sessions']} sessions ({export_stats.get('file_size_kb', 0)} KB)</p>
     <br>    
-    <p><a href="/test">🧪 Test Page</a> | <a href="/customer-data">📊 Customer Data</a></p>
+    <p><a href="/test">🧪 Test Page</a> | <a href="/customer-data">📊 Customer Data</a> | <a href="/calendar-status">📅 Calendar Status</a></p>
     """
 
 

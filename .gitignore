@@ -101,6 +101,10 @@ config.bak
 keys.txt
 credentials.txt
 
+# Google Calendar credentials
+credentials/*.json
+token.json
+
 # Jupyter Notebook checkpoints
 .ipynb_checkpoints
 

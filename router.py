@@ -7,6 +7,7 @@ Clean GPT-based response selection with reliable TTS handling
 from openai import OpenAI
 from config import Config
 from audio_manager import audio_manager
+from calendar_integration import calendar_client
 
 # Initialize OpenAI client
 openai_client = OpenAI(api_key=Config.OPENAI_API_KEY)
@@ -174,9 +175,10 @@ class ResponseRouter:
         if not is_booking_request:
             return None, None
         
-        # Get available slots from config
-        from config import Config
-        available_slots = Config.PLUMBING_AVAILABILITY["available_slots"]
+        # Get available slots from Google Calendar (with fallback to config)
+        service_type = session.get_session_variable("service_type") or "general"
+        calendar_data = calendar_client.get_available_slots(days_ahead=7, service_type=service_type)
+        available_slots = calendar_data.get("available_slots", [])
         
         # Get current date context for relative dates in client's timezone
         from datetime import datetime, timedelta
@@ -204,6 +206,33 @@ class ResponseRouter:
         confirmation_words = ["yes", "sounds good", "perfect", "that works", "confirm", "book that"]
         if any(word in user_lower for word in confirmation_words):
             if customer_name:
+                # Complete the booking with Google Calendar
+                customer_info = {
+                    "customer_name": customer_name,
+                    "customer_phone": session.get_session_variable("customer_phone"),
+                    "service_type": service_type,
+                    "customer_location": session.get_session_variable("customer_location"),
+                    "issue_description": session.get_session_variable("issue_description")
+                }
+                
+                # Try to book in calendar if we have a selected slot
+                selected_slot = session.get_session_variable("selected_appointment")
+                if selected_slot and available_slots:
+                    # Find the slot data for the selected appointment
+                    slot_datetime = None
+                    for slot in available_slots:
+                        if slot.get("display") == selected_slot or slot.get("slot_id") in selected_slot:
+                            slot_datetime = slot.get("datetime")
+                            break
+                    
+                    if slot_datetime:
+                        # Book in Google Calendar
+                        booking_result = calendar_client.book_appointment(slot_datetime, customer_info)
+                        if booking_result.get("success"):
+                            session.update_session_variable("booking_confirmed", True)
+                            session.update_session_variable("booking_reference", booking_result.get("booking_reference"))
+                
+                session.update_session_variable("booking_confirmed", True)
                 return "TTS", f"Excellent {customer_name}! You're all booked. I'll give you a call 30 minutes before we arrive. Thanks for choosing {Config.CLIENT_CONFIG['business_name']}!"
             else:
                 return "TTS", "Perfect! Can I grab your name and phone number to confirm the booking?"
